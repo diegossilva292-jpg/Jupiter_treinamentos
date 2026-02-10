@@ -46,6 +46,19 @@ Este guia descreve como colocar a plataforma no ar em uma VPS usando Docker.
     *   O Frontend estará acessível no IP da sua VPS (porta 80).
     *   O Backend estará na porta 3000.
 
+## 5. Configuração do Flussonic (Essencial) ⚠️
+
+Para que os vídeos toquem no seu site, você precisa liberar o CORS no painel do Flussonic.
+
+1.  Acesse o painel do Flussonic (`http://flussonic-tv.jupiter.com.br:8080/admin`).
+2.  Vá em **VODs** -> selecione `jupiter_treinamentos`.
+3.  Procure por "CORS" ou "Playback Headers".
+4.  Adicione o seguinte domínio (ou `*` para liberar geral):
+    *   `Access-Control-Allow-Origin: *`
+5.  Salve.
+
+**Sem isso, o navegador vai bloquear o vídeo!**
+
 ## Atualizando a Aplicação (Git Pull via Rebase)
 
 Sempre que você fizer alterações no código e enviar para o GitHub, faça o seguinte na VPS para atualizar:
