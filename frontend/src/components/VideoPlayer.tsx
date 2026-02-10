@@ -29,9 +29,14 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl, onEnded }) =
                 style={{ position: 'absolute', top: 0, left: 0 }}
                 controls
                 onEnded={onEnded}
+                onError={(e) => console.error('Video Player Error:', e)}
                 config={{
                     file: {
-                        forceHLS: videoUrl.endsWith('.m3u8')
+                        forceHLS: videoUrl.endsWith('.m3u8'),
+                        hlsOptions: {
+                            // Helper options for HLS
+                            debug: true,
+                        }
                     }
                 } as any}
             />

@@ -1,0 +1,27 @@
+[
+  {
+    "id": "c1770756373196",
+    "title": "Júpiter Telecomunicações",
+    "description": "Júpiter Telecomunicações, provedor de internet fundada em Imperatriz-MA, conectando pessoas desde 1997.",
+    "modules": [
+      {
+        "id": "m1770756379340",
+        "title": "Módulo 1",
+        "description": "",
+        "courseId": "c1770756373196",
+        "order": 1,
+        "lessons": [
+          {
+            "id": "l1770757191681",
+            "title": "O Inicio",
+            "videoUrl": "https://www.youtube.com/watch?v=p-tX8lq99IA",
+            "content": "A Júpiter Internet é um provedor de internet fundado em Imperatriz-MA, oferecendo serviços de alta velocidade desde 1997. A empresa utiliza tecnologia de fibra ótica para garantir uma conexão estável e segura. Os planos disponíveis incluem opções de 750 MEGA, 800 MEGA, 900 MEGA e até 1 GIGA",
+            "order": 1,
+            "moduleId": "m1770756379340",
+            "quizId": "q116"
+          }
+        ]
+      }
+    ]
+  }
+]
