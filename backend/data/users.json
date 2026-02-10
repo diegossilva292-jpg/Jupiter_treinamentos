@@ -1,0 +1,65 @@
+[
+  {
+    "id": "1",
+    "name": "JÚPITER TELECOM ADM",
+    "role": "admin",
+    "title": "Training Manager",
+    "xp": 45
+  },
+  {
+    "id": "2",
+    "name": "Bob Builder",
+    "role": "student",
+    "title": "Software Engineer",
+    "xp": 85
+  },
+  {
+    "id": "3",
+    "name": "Carol Coder",
+    "role": "student",
+    "title": "Frontend Dev",
+    "xp": 140
+  },
+  {
+    "id": "4",
+    "name": "Dave DevOps",
+    "role": "student",
+    "title": "SRE",
+    "xp": 145
+  },
+  {
+    "id": "nayrarhylari",
+    "name": "NAYRA RHYLARI SANTOS ALMEIDA",
+    "role": "student",
+    "title": "Novo Usuário",
+    "xp": 0
+  },
+  {
+    "id": "verissimomaciel",
+    "name": "VERISSIMO MACIEL VIANA NETO",
+    "role": "student",
+    "title": "Novo Usuário",
+    "xp": 97
+  },
+  {
+    "id": "diegodasilva",
+    "name": "DIEGO DA SILVA SANTOS",
+    "role": "student",
+    "title": "Novo Usuário",
+    "xp": 517
+  },
+  {
+    "id": "ruldsoncaio",
+    "name": "RULDSON CAIO DE OLIVEIRA SANTOS",
+    "role": "student",
+    "title": "Novo Usuário",
+    "xp": 110
+  },
+  {
+    "id": "fernandolima",
+    "name": "FERNANDO LIMA VIEIRA",
+    "role": "student",
+    "title": "Novo Usuário",
+    "xp": 0
+  }
+]

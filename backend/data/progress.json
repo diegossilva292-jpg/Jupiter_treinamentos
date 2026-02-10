@@ -1,0 +1,150 @@
+[
+  {
+    "userId": "verissimomaciel",
+    "lessonId": "l1",
+    "status": "COMPLETED",
+    "completedAt": "2026-02-07T14:11:52.609Z"
+  },
+  {
+    "userId": "verissimomaciel",
+    "lessonId": "l2",
+    "status": "COMPLETED",
+    "completedAt": "2026-02-07T14:12:22.774Z"
+  },
+  {
+    "userId": "diegodasilva",
+    "lessonId": "l1",
+    "status": "COMPLETED",
+    "completedAt": "2026-02-07T14:15:23.213Z"
+  },
+  {
+    "userId": "diegodasilva",
+    "lessonId": "l2",
+    "status": "COMPLETED",
+    "completedAt": "2026-02-07T14:15:47.942Z"
+  },
+  {
+    "userId": "3",
+    "lessonId": "l1",
+    "status": "COMPLETED",
+    "completedAt": "2026-02-09T13:48:39.404Z"
+  },
+  {
+    "userId": "3",
+    "lessonId": "l2",
+    "status": "COMPLETED",
+    "completedAt": "2026-02-09T13:49:34.051Z"
+  },
+  {
+    "userId": "4",
+    "lessonId": "l1",
+    "status": "COMPLETED",
+    "completedAt": "2026-02-09T14:51:33.235Z",
+    "attempts": 1,
+    "score": 0
+  },
+  {
+    "userId": "4",
+    "lessonId": "q1",
+    "status": "COMPLETED",
+    "completedAt": "2026-02-09T14:51:33.237Z",
+    "attempts": 1,
+    "score": 5
+  },
+  {
+    "userId": "4",
+    "lessonId": "lc2_mc2_1_1",
+    "status": "COMPLETED",
+    "completedAt": "2026-02-09T14:53:14.547Z",
+    "attempts": 1,
+    "score": 0
+  },
+  {
+    "userId": "4",
+    "lessonId": "q116",
+    "status": "COMPLETED",
+    "completedAt": "2026-02-09T21:28:40.763Z",
+    "attempts": 2,
+    "score": 5
+  },
+  {
+    "userId": "ruldsoncaio",
+    "lessonId": "l1",
+    "status": "COMPLETED",
+    "completedAt": "2026-02-09T14:54:53.010Z",
+    "attempts": 1,
+    "score": 0
+  },
+  {
+    "userId": "ruldsoncaio",
+    "lessonId": "q1",
+    "status": "COMPLETED",
+    "completedAt": "2026-02-09T14:54:53.012Z",
+    "attempts": 1,
+    "score": 5
+  },
+  {
+    "userId": "ruldsoncaio",
+    "lessonId": "lc2_mc2_1_1",
+    "status": "COMPLETED",
+    "completedAt": "2026-02-09T14:56:06.410Z",
+    "attempts": 1,
+    "score": 0
+  },
+  {
+    "userId": "ruldsoncaio",
+    "lessonId": "q116",
+    "status": "COMPLETED",
+    "completedAt": "2026-02-09T14:56:06.413Z",
+    "attempts": 1,
+    "score": 5
+  },
+  {
+    "userId": "2",
+    "lessonId": "l1",
+    "status": "COMPLETED",
+    "completedAt": "2026-02-09T15:31:49.957Z",
+    "attempts": 1,
+    "score": 0
+  },
+  {
+    "userId": "2",
+    "lessonId": "q1",
+    "status": "COMPLETED",
+    "completedAt": "2026-02-09T15:31:49.959Z",
+    "attempts": 1,
+    "score": 5
+  },
+  {
+    "userId": "diegodasilva",
+    "lessonId": "lc2_mc2_1_1",
+    "status": "COMPLETED",
+    "completedAt": "2026-02-09T15:54:38.919Z",
+    "attempts": 1,
+    "score": 0
+  },
+  {
+    "userId": "diegodasilva",
+    "lessonId": "q116",
+    "status": "COMPLETED",
+    "completedAt": "2026-02-10T11:11:35.682Z",
+    "attempts": 12,
+    "score": 5
+  },
+  {
+    "userId": "diegodasilva",
+    "lessonId": "lc1_mc1_1_1",
+    "status": "COMPLETED",
+    "completedAt": "2026-02-10T11:11:35.684Z",
+    "attempts": 11,
+    "score": 0
+  },
+  {
+    "userId": "4",
+    "lessonId": "lc1_mc1_1_1",
+    "status": "COMPLETED",
+    "completedAt": "2026-02-09T21:28:40.758Z",
+    "attempts": 1,
+    "score": 0
+  }
+]
