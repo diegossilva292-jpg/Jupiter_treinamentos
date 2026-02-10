@@ -21,6 +21,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     const [lessonTitle, setLessonTitle] = useState('');
     const [lessonVideoUrl, setLessonVideoUrl] = useState('');
     const [lessonContent, setLessonContent] = useState('');
+    const [uploading, setUploading] = useState(false);
+    const [videoSourceType, setVideoSourceType] = useState<'youtube' | 'upload'>('youtube');
 
     // Form States - Register User
     const [newUserName, setNewUserName] = useState('');
@@ -334,17 +336,71 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
                                 />
                             </div>
                             <div>
-                                <label style={{ color: 'var(--text-muted)' }}>URL do Vídeo (YouTube Embed)</label>
-                                <input
-                                    type="url"
-                                    placeholder="https://www.youtube.com/embed/..."
-                                    value={lessonVideoUrl}
-                                    onChange={e => setLessonVideoUrl(e.target.value)}
-                                    style={inputStyle}
-                                    required
-                                    onFocus={e => e.currentTarget.style.borderColor = 'var(--primary)'}
-                                    onBlur={e => e.currentTarget.style.borderColor = 'var(--glass-border)'}
-                                />
+                                <label style={{ color: 'var(--text-muted)' }}>Fonte do Vídeo</label>
+                                <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem' }}>
+                                    <label style={{ cursor: 'pointer', color: 'var(--text-main)' }}>
+                                        <input
+                                            type="radio"
+                                            checked={videoSourceType === 'youtube'}
+                                            onChange={() => setVideoSourceType('youtube')}
+                                            style={{ marginRight: '0.5rem' }}
+                                        />
+                                        YouTube
+                                    </label>
+                                    <label style={{ cursor: 'pointer', color: 'var(--text-main)' }}>
+                                        <input
+                                            type="radio"
+                                            checked={videoSourceType === 'upload'}
+                                            onChange={() => setVideoSourceType('upload')}
+                                            style={{ marginRight: '0.5rem' }}
+                                        />
+                                        Upload de Arquivo (Flussonic)
+                                    </label>
+                                </div>
+
+                                {videoSourceType === 'youtube' ? (
+                                    <input
+                                        type="url"
+                                        placeholder="https://www.youtube.com/embed/..."
+                                        value={lessonVideoUrl}
+                                        onChange={e => setLessonVideoUrl(e.target.value)}
+                                        style={inputStyle}
+                                        required={videoSourceType === 'youtube'}
+                                        onFocus={e => e.currentTarget.style.borderColor = 'var(--primary)'}
+                                        onBlur={e => e.currentTarget.style.borderColor = 'var(--glass-border)'}
+                                    />
+                                ) : (
+                                    <div>
+                                        <input
+                                            type="file"
+                                            accept="video/*"
+                                            onChange={async (e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    setUploading(true);
+                                                    try {
+                                                        const url = await api.uploadVideo(file);
+                                                        setLessonVideoUrl(url);
+                                                        alert('Upload concluído com sucesso!');
+                                                    } catch (error) {
+                                                        console.error(error);
+                                                        alert('Erro no upload do vídeo.');
+                                                    } finally {
+                                                        setUploading(false);
+                                                    }
+                                                }
+                                            }}
+                                            style={{ ...inputStyle, padding: '0.5rem' }}
+                                            required={videoSourceType === 'upload' && !lessonVideoUrl}
+                                        />
+                                        {uploading && <p style={{ color: 'var(--accent)', marginTop: '0.5rem' }}>Enviando vídeo... Aguarde...</p>}
+                                        {lessonVideoUrl && videoSourceType === 'upload' && !uploading && (
+                                            <p style={{ color: 'var(--primary)', marginTop: '0.5rem', fontSize: '0.9rem' }}>
+                                                Vídeo pronto: {lessonVideoUrl}
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                             <div>
                                 <label style={{ color: 'var(--text-muted)' }}>Conteúdo (Texto/Resumo)</label>

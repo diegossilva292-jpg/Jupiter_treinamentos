@@ -1,4 +1,4 @@
-export const API_URL = 'http://localhost:3000';
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export interface User {
     id: string;
@@ -177,5 +177,21 @@ export const api = {
         if (!res.ok) {
             throw new Error(`Falha ao excluir usuário: ${res.statusText}`);
         }
+    },
+    uploadVideo: async (file: File): Promise<string> => {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const res = await fetch(`${API_URL}/uploads`, {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!res.ok) {
+            throw new Error(`Falha ao enviar vídeo: ${res.statusText}`);
+        }
+
+        const data = await res.json();
+        return data.url;
     },
 };

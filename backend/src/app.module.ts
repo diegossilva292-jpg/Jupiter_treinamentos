@@ -10,9 +10,10 @@ import { UsersService } from './users/users.service';
 import { QuizzesModule } from './quizzes/quizzes.module';
 import { CertificatesModule } from './certificates/certificates.module';
 import { SharedModule } from './shared/shared.module';
+import { UploadsModule } from './uploads/uploads.module';
 
 @Module({
-  imports: [SharedModule, QuizzesModule, CertificatesModule],
+  imports: [SharedModule, QuizzesModule, CertificatesModule, UploadsModule],
   controllers: [
     AppController,
     CoursesController,

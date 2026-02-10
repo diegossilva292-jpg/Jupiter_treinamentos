@@ -1,0 +1,23 @@
+services:
+  backend:
+    build: ./backend
+    container_name: jupiter-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - FLUSSONIC_URL=${FLUSSONIC_URL}
+      - FLUSSONIC_USER=${FLUSSONIC_USER}
+      - FLUSSONIC_PASSWORD=${FLUSSONIC_PASSWORD}
+      - FLUSSONIC_VOD_NAME=${FLUSSONIC_VOD_NAME}
+    volumes:
+      - ./backend/data:/usr/src/app/data
+    restart: always
+
+  frontend:
+    build: ./frontend
+    container_name: jupiter-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: always
