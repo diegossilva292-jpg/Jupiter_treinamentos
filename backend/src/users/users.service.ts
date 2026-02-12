@@ -74,12 +74,16 @@ export class UsersService implements OnModuleInit {
     }
 
     async loginProxy(body: any) {
-        console.log('Login attempt received in Service:', body.usuario || body.email);
+        // Sanitize inputs
+        const usuarioRaw = body.usuario || body.email || '';
+        const senhaRaw = body.senha || body.password || '';
 
         const apiBody = {
-            usuario: body.usuario || body.email,
-            senha: body.senha || body.password
+            usuario: usuarioRaw.trim(),
+            senha: senhaRaw.trim()
         };
+
+        console.log('Login attempt received in Service:', apiBody.usuario);
 
         try {
             // Attempt External API Login
@@ -92,7 +96,7 @@ export class UsersService implements OnModuleInit {
                 body: JSON.stringify(apiBody),
             });
 
-            console.log('External API Status:', response.status);
+            console.log(`External API Status: ${response.status} ${response.statusText}`);
 
             if (response.ok) {
                 const data = await response.json();
@@ -121,10 +125,12 @@ export class UsersService implements OnModuleInit {
                     };
                 }
             } else {
-                console.warn('External API Login Failed');
+                // Log the error body to understand why it failed (e.g. 403 Forbidden)
+                const errorText = await response.text();
+                console.warn('External API Login Failed. Body:', errorText);
             }
         } catch (error) {
-            console.error('External API Error (Proceeding to fallback):', error);
+            console.error('External API Request Error (Proceeding to fallback):', error);
         }
 
         // Fallback: Check Local Users
