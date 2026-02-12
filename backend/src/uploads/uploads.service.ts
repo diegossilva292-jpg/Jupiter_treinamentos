@@ -1,9 +1,57 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, OnModuleInit } from '@nestjs/common';
 import { Express } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
-export class UploadsService {
+export class UploadsService implements OnModuleInit {
+    async onModuleInit() {
+        await this.configureFlussonicCors();
+    }
+
+    async configureFlussonicCors() {
+        const flussonicUrl = process.env.FLUSSONIC_URL;
+        const vodName = process.env.FLUSSONIC_VOD_NAME;
+        const flussonicUser = process.env.FLUSSONIC_USER;
+        const flussonicPassword = process.env.FLUSSONIC_PASSWORD;
+
+        if (!flussonicUrl || !vodName || !flussonicUser || !flussonicPassword) {
+            console.warn('[Flussonic] Config missing, skipping auto-configuration.');
+            return;
+        }
+
+        const configUrl = `${flussonicUrl}/streamer/api/v3/vods/${vodName}`;
+        console.log(`[Flussonic] Attempting to configure CORS at ${configUrl}...`);
+
+        try {
+            const auth = Buffer.from(`${flussonicUser}:${flussonicPassword}`).toString('base64');
+
+            // Flussonic V3 API: PUT /streamer/api/v3/vods/{name}
+            const response = await fetch(configUrl, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Basic ${auth}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    headers: {
+                        'Access-Control-Allow-Origin': '*',
+                        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+                        'Access-Control-Allow-Headers': 'Content-Type, Authorization, Range'
+                    }
+                }),
+            });
+
+            if (response.ok) {
+                console.log('[Flussonic] CORS successfully configured!');
+            } else {
+                const text = await response.text();
+                // Don't throw, just log. We don't want to crash the backend if Flussonic is down.
+                console.warn(`[Flussonic] Failed to configure CORS: ${response.status} ${text}`);
+            }
+        } catch (error) {
+            console.error('[Flussonic] Error configuring CORS:', error);
+        }
+    }
     async uploadToFlussonic(file: Express.Multer.File): Promise<string> {
         const flussonicUrl = process.env.FLUSSONIC_URL;
         const flussonicUser = process.env.FLUSSONIC_USER;

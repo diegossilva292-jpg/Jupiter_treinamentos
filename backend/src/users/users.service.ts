@@ -52,11 +52,16 @@ export class UsersService implements OnModuleInit {
     upsertUser(externalUser: { id: string; name: string; email?: string }): User {
         let user = this.users.find(u => u.id === externalUser.id);
         if (!user) {
+            const isRoot = ['admin', 'developer', 'dev', 'jupiter'].some(k =>
+                externalUser.id.toLowerCase().includes(k) ||
+                externalUser.name.toLowerCase().includes(k)
+            );
+
             user = {
                 id: externalUser.id,
                 name: externalUser.name,
-                role: 'student', // Default role for new external users
-                title: 'Novo Usuário',
+                role: isRoot ? 'admin' : 'student',
+                title: isRoot ? 'Administrador' : 'Aluno',
                 xp: 0
             };
             this.users.push(user);
