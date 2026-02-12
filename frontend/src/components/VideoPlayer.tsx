@@ -1,11 +1,5 @@
 import React, { useState } from 'react';
 import ReactPlayer from 'react-player';
-import Hls from 'hls.js';
-
-// Polyfill HLS for ReactPlayer if needed
-if (typeof window !== 'undefined' && !(window as any).Hls) {
-    (window as any).Hls = Hls;
-}
 
 interface VideoPlayerProps {
     videoUrl: string;
@@ -13,13 +7,14 @@ interface VideoPlayerProps {
 }
 
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl, onEnded }) => {
-    // Cast to any to avoid TS error with props
-    const ReactPlayerAny = ReactPlayer as any;
     const [error, setError] = useState<string | null>(null);
 
     if (!videoUrl) {
         return <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center' }}>Vídeo indisponível (URL vazia)</div>;
     }
+
+    // Cast to any to avoid TS error with props (ReactPlayer types can be finicky)
+    const ReactPlayerAny = ReactPlayer as any;
 
     return (
         <div
@@ -66,22 +61,18 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl, onEnded }) =
                     width="100%"
                     height="100%"
                     style={{ position: 'absolute', top: 0, left: 0 }}
-                    controls
+                    controls={true}
                     onEnded={onEnded}
-                    onError={(e: any, data: any) => {
-                        console.error('Video Player Error:', e, data);
-                        let msg = 'Não foi possível carregar o vídeo.';
-                        if (e?.type === 'networkError') msg += ' Erro de rede (CORS ou Falha de Conexão).';
-                        if (e?.type === 'mediaError') msg += ' Formato não suportado ou arquivo corrompido.';
-                        setError(msg);
+                    onError={(e: any) => {
+                        console.error('Video Player Error:', e);
+                        setError('Não foi possível carregar o vídeo. Verifique a conexão ou se a URL é válida.');
                     }}
                     config={{
+                        youtube: {
+                            // YouTube specific options if needed
+                        },
                         file: {
                             forceHLS: videoUrl.includes('.m3u8'),
-                            hlsOptions: {
-                                debug: false,
-                                enableWorker: true,
-                            }
                         }
                     } as any}
                 />

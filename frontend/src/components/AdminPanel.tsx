@@ -119,7 +119,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
             })));
         } catch (error) {
             console.error(error);
-            alert('Erro ao adicionar aula');
+            if (error instanceof TypeError && error.message === 'Failed to fetch') {
+                alert('Não foi possível conectar ao servidor. Verifique se o backend está rodando em http://localhost:3000. \n\nSe você estiver usando Docker, verifique se o container do backend está ativo.');
+            } else {
+                alert('Erro ao adicionar aula. Verifique o console para mais detalhes.');
+            }
         }
     };
 
