@@ -1,23 +1,23 @@
 [
   {
-    "id": "c1770927449956",
-    "title": "teste 01",
-    "description": "jsnciaidnws",
+    "id": "c1770928752915",
+    "title": "teste",
+    "description": "teste",
     "modules": [
       {
-        "id": "m1770927453533",
+        "id": "m1770928756724",
         "title": "Módulo 1",
         "description": "",
-        "courseId": "c1770927449956",
+        "courseId": "c1770928752915",
         "order": 1,
         "lessons": [
           {
-            "id": "l1770927490787",
-            "title": "kjskdbkbdxkas",
+            "id": "l1770928829580",
+            "title": "teste 01",
             "videoUrl": "https://www.youtube.com/watch?v=p-tX8lq99IA",
-            "content": "lskdjsdkls",
+            "content": "teste",
             "order": 1,
-            "moduleId": "m1770927453533"
+            "moduleId": "m1770928756724"
           }
         ]
       }

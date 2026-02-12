@@ -97,6 +97,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
                 quizId = quiz.id;
             }
 
+            if (!lessonVideoUrl.trim()) {
+                alert('Erro: A URL do vídeo está vazia. Por favor, insira uma URL do YouTube ou faça upload de um vídeo.');
+                return;
+            }
+
+            console.log('Submitting Lesson:', {
+                title: lessonTitle,
+                videoUrl: lessonVideoUrl,
+                content: lessonContent,
+                quizId,
+                videoSourceType
+            });
+
             await fetch(`http://localhost:3000/courses/${selectedCourseId}/modules/${selectedModuleId}/lessons`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -107,7 +120,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
                     quizId
                 })
             });
-            alert('Aula adicionada com sucesso!');
+            alert(`Aula adicionada com sucesso! \nURL do Vídeo: ${lessonVideoUrl}`);
             setLessonTitle('');
             setLessonVideoUrl('');
             setLessonContent('');
