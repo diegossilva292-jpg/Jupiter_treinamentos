@@ -35,7 +35,40 @@
         "description": "",
         "courseId": "c1770928752915",
         "order": 2,
-        "lessons": []
+        "lessons": [
+          {
+            "id": "l1770993712865",
+            "title": "aula teste 02",
+            "videoUrl": "https://flussonic-tv.jupiter.com.br/jupiter_treinamentos/8ac13963-7c2f-45a3-ba6f-62e25b7b692d.mp4/index.m3u8",
+            "content": "teste",
+            "order": 1,
+            "moduleId": "m1770962614552"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "c1770993778292",
+    "title": "teste 02",
+    "description": "teste",
+    "modules": [
+      {
+        "id": "m1770993785820",
+        "title": "Módulo 1",
+        "description": "",
+        "courseId": "c1770993778292",
+        "order": 1,
+        "lessons": [
+          {
+            "id": "l1770993841032",
+            "title": "conector",
+            "videoUrl": "https://flussonic-tv.jupiter.com.br/jupiter_treinamentos/2aecf12c-c66b-4548-8161-05e961dcc636.mp4/index.m3u8",
+            "content": "teste",
+            "order": 1,
+            "moduleId": "m1770993785820"
+          }
+        ]
       }
     ]
   }
