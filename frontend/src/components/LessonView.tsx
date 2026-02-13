@@ -127,7 +127,11 @@ export const LessonView: React.FC<LessonViewProps> = ({ lesson, courseId, module
                 </h1>
 
                 <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2rem' }}>
-                    <VideoPlayer videoUrl={lesson.videoUrl} onEnded={handleVideoEnded} />
+                    <VideoPlayer
+                        key={lesson.id}
+                        videoUrl={lesson.videoUrl}
+                        onEnded={handleVideoEnded}
+                    />
 
                     {/* Manual completion button for Flussonic videos */}
                     {lesson.videoUrl.includes('.m3u8') && !quizVisible && (
