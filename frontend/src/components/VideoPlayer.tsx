@@ -1,16 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 interface VideoPlayerProps {
     videoUrl: string;
     onEnded: () => void;
+    onProgress?: (percentWatched: number) => void;
 }
 
-export const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl, onEnded }) => {
-    const [error, setError] = useState<string | null>(null);
+// YouTube Player API types
+declare global {
+    interface Window {
+        YT: any;
+        onYouTubeIframeAPIReady: () => void;
+    }
+}
 
-    // onEnded is kept for interface compatibility but not used in iframe-based player
-    // Future enhancement: use postMessage API to detect video end
-    void onEnded;
+export const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl, onEnded, onProgress }) => {
+    const [error, setError] = useState<string | null>(null);
+    const [watchedPercent, setWatchedPercent] = useState(0);
+    const youtubePlayerRef = useRef<any>(null);
+    const playerContainerRef = useRef<HTMLDivElement>(null);
+    const [ytApiReady, setYtApiReady] = useState(false);
 
     // DEBUG: Log every video URL received
     console.log('[VideoPlayer] Rendering with URL:', videoUrl);
@@ -23,38 +32,119 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl, onEnded }) =
     const isFlussonic = videoUrl.includes('.m3u8');
     const isYoutube = videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be');
 
-    // Convert URLs to embed format
-    let embedUrl = videoUrl;
-
-    if (isFlussonic) {
-        // Convert .m3u8 URL to embed.html
-        // From: https://flussonic-tv.jupiter.com.br/jupiter_treinamentos/file.mp4/index.m3u8
-        // To:   https://flussonic-tv.jupiter.com.br/jupiter_treinamentos/file.mp4/embed.html
-        embedUrl = videoUrl.replace('/index.m3u8', '/embed.html');
-        console.log('[VideoPlayer] Flussonic embed URL:', embedUrl);
-    } else if (isYoutube) {
-        // Convert YouTube watch URL to embed
-        // From: https://www.youtube.com/watch?v=VIDEO_ID
-        // To:   https://www.youtube.com/embed/VIDEO_ID
-        const videoId = videoUrl.includes('watch?v=')
-            ? videoUrl.split('watch?v=')[1].split('&')[0]
-            : videoUrl.split('youtu.be/')[1]?.split('?')[0];
-
-        if (videoId) {
-            embedUrl = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&rel=0`;
-            console.log('[VideoPlayer] YouTube embed URL:', embedUrl);
+    // Extract YouTube video ID
+    const getYouTubeVideoId = (url: string): string | null => {
+        if (url.includes('watch?v=')) {
+            return url.split('watch?v=')[1].split('&')[0];
+        } else if (url.includes('youtu.be/')) {
+            return url.split('youtu.be/')[1]?.split('?')[0];
         }
-    }
-
-    // Handle iframe load/error
-    const handleIframeLoad = () => {
-        console.log('[VideoPlayer] Iframe loaded successfully');
+        return null;
     };
 
-    const handleIframeError = () => {
-        console.error('[VideoPlayer] Iframe failed to load');
-        setError('Não foi possível carregar o vídeo');
+    const youtubeVideoId = isYoutube ? getYouTubeVideoId(videoUrl) : null;
+
+    // Load YouTube iFrame API
+    useEffect(() => {
+        if (!isYoutube) return;
+
+        // Check if API is already loaded
+        if (window.YT && window.YT.Player) {
+            setYtApiReady(true);
+            return;
+        }
+
+        // Load the API script
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+
+        // Set the API ready callback
+        window.onYouTubeIframeAPIReady = () => {
+            console.log('[VideoPlayer] YouTube API Ready');
+            setYtApiReady(true);
+        };
+
+        return () => {
+            // Cleanup
+            if (youtubePlayerRef.current) {
+                youtubePlayerRef.current.destroy();
+            }
+        };
+    }, [isYoutube]);
+
+    // Initialize YouTube Player
+    useEffect(() => {
+        if (!isYoutube || !ytApiReady || !youtubeVideoId || !playerContainerRef.current) return;
+
+        console.log('[VideoPlayer] Initializing YouTube Player for:', youtubeVideoId);
+
+        youtubePlayerRef.current = new window.YT.Player(playerContainerRef.current, {
+            videoId: youtubeVideoId,
+            playerVars: {
+                autoplay: 0,
+                rel: 0,
+                modestbranding: 1,
+                enablejsapi: 1
+            },
+            events: {
+                onReady: (_event: any) => {
+                    console.log('[VideoPlayer] YouTube Player Ready');
+                },
+                onStateChange: (event: any) => {
+                    console.log('[VideoPlayer] YouTube State Change:', event.data);
+
+                    // YT.PlayerState.ENDED = 0
+                    if (event.data === 0) {
+                        console.log('[VideoPlayer] YouTube video ended, calling onEnded');
+                        onEnded();
+                    }
+                },
+                onError: (event: any) => {
+                    console.error('[VideoPlayer] YouTube Player Error:', event.data);
+                    setError('Erro ao carregar vídeo do YouTube');
+                }
+            }
+        });
+
+        // Optional: Track progress
+        const progressInterval = setInterval(() => {
+            if (youtubePlayerRef.current && youtubePlayerRef.current.getDuration) {
+                const duration = youtubePlayerRef.current.getDuration();
+                const currentTime = youtubePlayerRef.current.getCurrentTime();
+
+                if (duration > 0) {
+                    const percent = Math.floor((currentTime / duration) * 100);
+                    setWatchedPercent(percent);
+
+                    if (onProgress) {
+                        onProgress(percent);
+                    }
+
+                    // Auto-complete at 90%
+                    if (percent >= 90 && percent < 95) {
+                        console.log('[VideoPlayer] 90% watched, marking as complete');
+                        onEnded();
+                    }
+                }
+            }
+        }, 2000); // Check every 2 seconds
+
+        return () => {
+            clearInterval(progressInterval);
+            if (youtubePlayerRef.current && youtubePlayerRef.current.destroy) {
+                youtubePlayerRef.current.destroy();
+            }
+        };
+    }, [ytApiReady, youtubeVideoId, isYoutube, onEnded, onProgress]);
+
+    // Flussonic embed URL
+    const getFlussonicEmbedUrl = (url: string): string => {
+        return url.replace('/index.m3u8', '/embed.html');
     };
+
+    const flussonicEmbedUrl = isFlussonic ? getFlussonicEmbedUrl(videoUrl) : '';
 
     return (
         <div
@@ -95,9 +185,41 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl, onEnded }) =
                         Tentar Novamente
                     </button>
                 </div>
+            ) : isYoutube ? (
+                <>
+                    {/* YouTube Player Container */}
+                    <div
+                        ref={playerContainerRef}
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%'
+                        }}
+                    />
+
+                    {/* Progress Indicator */}
+                    {watchedPercent > 0 && watchedPercent < 100 && (
+                        <div
+                            style={{
+                                position: 'absolute',
+                                bottom: 0,
+                                left: 0,
+                                width: `${watchedPercent}%`,
+                                height: '4px',
+                                background: 'linear-gradient(90deg, var(--primary), var(--secondary))',
+                                transition: 'width 0.5s',
+                                zIndex: 10,
+                                pointerEvents: 'none'
+                            }}
+                        />
+                    )}
+                </>
             ) : (
+                // Flussonic or other iframes
                 <iframe
-                    src={embedUrl}
+                    src={flussonicEmbedUrl || videoUrl}
                     style={{
                         position: 'absolute',
                         top: 0,
@@ -108,8 +230,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl, onEnded }) =
                     }}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
-                    onLoad={handleIframeLoad}
-                    onError={handleIframeError}
+                    onLoad={() => console.log('[VideoPlayer] Flussonic iframe loaded')}
+                    onError={() => setError('Erro ao carregar vídeo')}
                     title="Video Player"
                 />
             )}

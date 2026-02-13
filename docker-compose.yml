@@ -3,7 +3,7 @@ services:
     build: ./backend
     container_name: jupiter-backend
     ports:
-      - "3000:3000"
+      - "3336:3000"
     environment:
       - FLUSSONIC_URL=${FLUSSONIC_URL}
       - FLUSSONIC_USER=${FLUSSONIC_USER}
@@ -18,7 +18,7 @@ services:
     build: ./frontend
     container_name: jupiter-frontend
     ports:
-      - "8080:80"
+      - "3337:80"
     depends_on:
       - backend
     restart: always

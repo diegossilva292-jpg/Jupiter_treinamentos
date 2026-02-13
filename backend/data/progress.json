@@ -146,5 +146,21 @@
     "completedAt": "2026-02-09T21:28:40.758Z",
     "attempts": 1,
     "score": 0
+  },
+  {
+    "userId": "carlosrllj",
+    "lessonId": "l1770928829580",
+    "status": "COMPLETED",
+    "completedAt": "2026-02-13T05:25:54.944Z",
+    "attempts": 1,
+    "score": 0
+  },
+  {
+    "userId": "carlosrllj",
+    "lessonId": "l1770955597468",
+    "status": "COMPLETED",
+    "completedAt": "2026-02-13T05:26:56.598Z",
+    "attempts": 1,
+    "score": 0
   }
 ]

@@ -119,6 +119,23 @@ export const LessonView: React.FC<LessonViewProps> = ({ lesson, courseId, module
 
                 <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2rem' }}>
                     <VideoPlayer videoUrl={lesson.videoUrl} onEnded={handleVideoEnded} />
+
+                    {/* Manual completion button for Flussonic videos */}
+                    {lesson.videoUrl.includes('.m3u8') && !quizVisible && (
+                        <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+                            <button
+                                className="btn"
+                                onClick={handleVideoEnded}
+                                style={{ padding: '0.75rem 2rem' }}
+                            >
+                                ✓ Marcar Vídeo como Assistido
+                            </button>
+                            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+                                Clique após assistir o vídeo completo
+                            </p>
+                        </div>
+                    )}
+
                     {lesson.content && (
                         <div style={{ marginTop: '2rem', padding: '1.5rem', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-md)', border: '1px solid var(--glass-border)' }}>
                             <h3 style={{ marginTop: 0, color: 'var(--secondary)' }}>Conteúdo da Aula</h3>
