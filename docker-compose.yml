@@ -29,7 +29,7 @@ services:
       - FLUSSONIC_USER=${FLUSSONIC_USER}
       - FLUSSONIC_PASSWORD=${FLUSSONIC_PASSWORD}
       - FLUSSONIC_VOD_NAME=${FLUSSONIC_VOD_NAME}
-      - DB_HOST=postgres
+      - DB_HOST=jupiter-postgres
       - DB_PORT=5432
       - DB_USER=postgres
       - DB_PASSWORD=${DB_PASSWORD}
