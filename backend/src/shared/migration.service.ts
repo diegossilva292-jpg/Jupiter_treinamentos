@@ -191,8 +191,26 @@ export class MigrationService {
         }
 
         const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        let migrated = 0;
+        let skipped = 0;
 
         for (const certData of data) {
+            // Validate user exists
+            const userExists = await this.userRepo.findOne({ where: { id: certData.userId } });
+            if (!userExists) {
+                console.log(`  ⊘ Skipped: userId ${certData.userId} not found`);
+                skipped++;
+                continue;
+            }
+
+            // Validate course exists
+            const courseExists = await this.courseRepo.findOne({ where: { id: certData.courseId } });
+            if (!courseExists) {
+                console.log(`  ⊘ Skipped: courseId ${certData.courseId} not found`);
+                skipped++;
+                continue;
+            }
+
             const existing = await this.certificateRepo.findOne({
                 where: { userId: certData.userId, courseId: certData.courseId }
             });
@@ -204,10 +222,11 @@ export class MigrationService {
                     issuedAt: new Date(certData.issuedAt),
                 }));
                 console.log(`  ✓ Migrated certificate for user ${certData.userId}`);
+                migrated++;
             }
         }
 
-        console.log(`✅ Certificates migrated: ${data.length} total\n`);
+        console.log(`✅ Certificates migrated: ${migrated} migrated, ${skipped} skipped\n`);
     }
 
     async clearDatabase(): Promise<void> {
