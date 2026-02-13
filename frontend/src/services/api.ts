@@ -96,7 +96,7 @@ export const api = {
         return res.json();
     },
     login: async (usuario: string, senha: string): Promise<AuthResponse> => {
-        const res = await fetch(`${API_URL}/users/login`, {
+        const res = await fetch(`${API_URL}/action/Usuario/logar`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
