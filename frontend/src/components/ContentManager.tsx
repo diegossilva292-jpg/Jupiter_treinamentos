@@ -187,16 +187,17 @@ export const ContentManager: React.FC<ContentManagerProps> = ({ courses, onUpdat
                         padding: '0.8rem',
                         borderRadius: 'var(--radius-md)',
                         border: '1px solid var(--glass-border)',
-                        background: 'rgba(255,255,255,0.05)',
-                        color: 'var(--text-main)',
+                        background: 'rgba(255,255,255,0.1)',
+                        color: '#ffffff',
                         fontSize: '1rem',
                         width: '100%',
-                        maxWidth: '400px'
+                        maxWidth: '400px',
+                        cursor: 'pointer'
                     }}
                 >
-                    <option value="">-- Escolha o Curso --</option>
+                    <option value="" style={{ background: '#1a1a1a', color: '#ffffff' }}>-- Escolha o Curso --</option>
                     {courses.map(course => (
-                        <option key={course.id} value={course.id}>{course.title}</option>
+                        <option key={course.id} value={course.id} style={{ background: '#1a1a1a', color: '#ffffff' }}>{course.title}</option>
                     ))}
                 </select>
             </div>
