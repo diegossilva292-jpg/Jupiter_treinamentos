@@ -1,0 +1,19 @@
+ Image jupiter_treinamentos-backend Building 
+Dockerfile:7
+
+--------------------
+
+   5 |     COPY package*.json ./
+
+   6 |     
+
+   7 | >>> RUN rm -f package-lock.json && npm install --verbose
+
+   8 |     
+
+   9 |     COPY . .
+
+--------------------
+
+failed to solve: process "/bin/sh -c rm -f package-lock.json && npm install --verbose" did not complete successfully: exit code: 1
+

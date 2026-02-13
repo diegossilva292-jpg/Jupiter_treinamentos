@@ -1,6 +1,9 @@
-import { Controller, Get, Param, Post, Body, Delete } from '@nestjs/common';
+import { Controller, Get, Param, Post, Body, Delete, UseGuards, Patch } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { Course, CourseModule, Lesson } from './entities/course.entity';
+import { AuthGuard } from '../shared/auth.guard';
+import { RolesGuard } from '../shared/roles.guard';
+import { Roles } from '../shared/roles.decorator';
 
 @Controller('courses')
 export class CoursesController {
@@ -17,11 +20,15 @@ export class CoursesController {
     }
 
     @Post()
+    @UseGuards(AuthGuard, RolesGuard)
+    @Roles('admin')
     create(@Body() createCourseDto: Partial<Course>) {
         return this.coursesService.createCourse(createCourseDto);
     }
 
     @Post(':id/modules')
+    @UseGuards(AuthGuard, RolesGuard)
+    @Roles('admin')
     createModule(@Param('id') id: string, @Body() createModuleDto: any) {
         return this.coursesService.addModule(id, createModuleDto);
     }
@@ -29,6 +36,20 @@ export class CoursesController {
     @Post(':id/modules/:moduleId/lessons')
     addLesson(@Param('id') id: string, @Param('moduleId') moduleId: string, @Body() createLessonDto: any) {
         return this.coursesService.addLesson(id, moduleId, createLessonDto);
+    }
+
+    @Patch(':id/modules/reorder')
+    @UseGuards(AuthGuard, RolesGuard)
+    @Roles('admin')
+    reorderModules(@Param('id') id: string, @Body() body: { moduleIds: string[] }) {
+        return this.coursesService.reorderModules(id, body.moduleIds);
+    }
+
+    @Patch(':id/modules/:moduleId/lessons/reorder')
+    @UseGuards(AuthGuard, RolesGuard)
+    @Roles('admin')
+    reorderLessons(@Param('id') id: string, @Param('moduleId') moduleId: string, @Body() body: { lessonIds: string[] }) {
+        return this.coursesService.reorderLessons(id, moduleId, body.lessonIds);
     }
 
     @Delete(':id')

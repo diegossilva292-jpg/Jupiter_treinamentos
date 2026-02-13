@@ -18,6 +18,14 @@
             "content": "teste",
             "order": 1,
             "moduleId": "m1770928756724"
+          },
+          {
+            "id": "l1770955597468",
+            "title": "testa aula",
+            "videoUrl": "https://flussonic-tv.jupiter.com.br/jupiter_treinamentos/c8d29347-e966-4f55-af30-b58f69332b13.mp4/index.m3u8",
+            "content": "teste\n",
+            "order": 2,
+            "moduleId": "m1770928756724"
           }
         ]
       }

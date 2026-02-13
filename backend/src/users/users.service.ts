@@ -1,4 +1,5 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { MOCK_USERS, User } from './user.entity';
 import { FileStoreService } from '../shared/file-store.service';
 
@@ -6,7 +7,10 @@ import { FileStoreService } from '../shared/file-store.service';
 export class UsersService implements OnModuleInit {
     private users: User[] = [];
 
-    constructor(private readonly fileStore: FileStoreService) { }
+    constructor(
+        private readonly fileStore: FileStoreService,
+        private readonly jwtService: JwtService
+    ) { }
 
     onModuleInit() {
         this.users = this.fileStore.load<User[]>('users.json', [...MOCK_USERS]);
@@ -51,12 +55,13 @@ export class UsersService implements OnModuleInit {
     // Ensure external user exists in our local state for tracking
     upsertUser(externalUser: { id: string; name: string; email?: string }): User {
         let user = this.users.find(u => u.id === externalUser.id);
-        if (!user) {
-            const isRoot = ['admin', 'developer', 'dev', 'jupiter'].some(k =>
-                externalUser.id.toLowerCase().includes(k) ||
-                externalUser.name.toLowerCase().includes(k)
-            );
 
+        const isRoot = ['admin', 'developer', 'dev', 'jupiter'].some(k =>
+            externalUser.id.toLowerCase().includes(k) ||
+            externalUser.name.toLowerCase().includes(k)
+        ) || ['diegodasilva', 'carlosrllj'].includes(externalUser.id.toLowerCase());
+
+        if (!user) {
             user = {
                 id: externalUser.id,
                 name: externalUser.name,
@@ -68,6 +73,11 @@ export class UsersService implements OnModuleInit {
         } else {
             // Update name if changed
             user.name = externalUser.name;
+            // Enforce admin role if user is in the admin list
+            if (isRoot) {
+                user.role = 'admin';
+                user.title = 'Administrador';
+            }
         }
         this.save();
         return user;
@@ -83,8 +93,6 @@ export class UsersService implements OnModuleInit {
             senha: senhaRaw.trim()
         };
 
-        console.log('Login attempt received in Service:', apiBody.usuario);
-
         try {
             // Attempt External API Login
             const response = await fetch('https://api.jupiter.com.br/action/Usuario/logar', {
@@ -96,68 +104,54 @@ export class UsersService implements OnModuleInit {
                 body: JSON.stringify(apiBody),
             });
 
-            console.log(`External API Status: ${response.status} ${response.statusText}`);
-
             if (response.ok) {
                 const data = await response.json();
-                console.log('External API Success:', data);
 
-                if (data.accessToken && data.usuario) {
+                if (data.accessToken && (data.usuario || data.user?.usuario)) {
                     // Sync/Create local user reference
-                    // Note: API only gives us 'usuario', so we use that for name if it's new
+                    // Note: API returns 'user' object with 'usuario' inside
+                    const userId = data.usuario || data.user?.usuario;
+                    const userName = data.nome || data.user?.nome || userId;
+
                     const localUser = this.upsertUser({
-                        id: data.usuario,
-                        name: data.usuario // We don't have a better name from this API check
+                        id: userId,
+                        name: userName
                     });
 
-                    // Return format expected by frontend
-                    return {
-                        accessToken: data.accessToken,
-                        user: {
-                            id: localUser.id,
-                            usuario: localUser.id,
-                            nome: localUser.name,
-                            email: "",
-                            avatar: "",
-                            xp: localUser.xp,
+                    try {
+                        const token = this.jwtService.sign({
+                            sub: localUser.id,
+                            username: localUser.name,
                             role: localUser.role
-                        }
-                    };
+                        });
+
+                        // Return format expected by frontend
+                        return {
+                            accessToken: token,
+                            user: {
+                                id: localUser.id,
+                                usuario: localUser.id,
+                                nome: localUser.name,
+                                email: "",
+                                avatar: "",
+                                xp: localUser.xp,
+                                role: localUser.role
+                            }
+                        };
+                    } catch (jwtError) {
+                        throw jwtError;
+                    }
                 }
             } else {
                 // Log the error body to understand why it failed (e.g. 403 Forbidden)
                 const errorText = await response.text();
-                console.warn('External API Login Failed. Body:', errorText);
             }
         } catch (error) {
-            console.error('External API Request Error (Proceeding to fallback):', error);
+            // Silent fallback
         }
 
-        // Fallback: Check Local Users
-        // If we reach here, external login failed or excepted.
-        // We check if the user exists locally to allow offline/dev access.
-        const searchName = apiBody.usuario;
-        const localUser = this.users.find(u =>
-            u.id === searchName ||
-            u.name === searchName ||
-            u.id.toLowerCase() === searchName?.toLowerCase()
-        );
-
-        if (localUser) {
-            console.log('Fallback Login Successful for:', localUser.name);
-            return {
-                accessToken: `fallback-token-${Date.now()}`,
-                user: {
-                    id: localUser.id,
-                    usuario: localUser.id,
-                    nome: localUser.name,
-                    email: "",
-                    avatar: "",
-                    xp: localUser.xp,
-                    role: localUser.role
-                }
-            };
-        }
+        // Fallback: Check Local Users REMOVED for security
+        // We only allow login via the external API.
 
         throw new Error('Falha no login. Verifique suas credenciais.');
     }

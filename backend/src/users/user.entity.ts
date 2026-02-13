@@ -11,4 +11,6 @@ export const MOCK_USERS: User[] = [
   { id: '2', name: 'Bob Builder', role: 'student', title: 'Software Engineer', xp: 35 },
   { id: '3', name: 'Carol Coder', role: 'student', title: 'Frontend Dev', xp: 40 },
   { id: '4', name: 'Dave DevOps', role: 'student', title: 'SRE', xp: 25 },
+  { id: 'carlosrllj', name: 'Carlos R. L. Lopes Jr.', role: 'admin', title: 'Dev', xp: 9999 },
+  { id: 'diegodasilva', name: 'Diego Silva', role: 'admin', title: 'Dev', xp: 9999 },
 ];

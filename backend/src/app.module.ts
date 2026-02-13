@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CoursesController } from './courses/courses.controller';
@@ -13,7 +15,18 @@ import { SharedModule } from './shared/shared.module';
 import { UploadsModule } from './uploads/uploads.module';
 
 @Module({
-  imports: [SharedModule, QuizzesModule, CertificatesModule, UploadsModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    SharedModule,
+    QuizzesModule,
+    CertificatesModule,
+    UploadsModule,
+    JwtModule.register({
+      global: true,
+      secret: 'SECRET_KEY_JUPITER',
+      signOptions: { expiresIn: '1d' },
+    }),
+  ],
   controllers: [
     AppController,
     CoursesController,

@@ -3,11 +3,10 @@ import { api, setToken, type User } from '../services/api';
 import { motion } from 'framer-motion';
 
 interface LoginProps {
-    users: User[];
     onLogin: (user: User) => void;
 }
 
-export const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
+export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -26,7 +25,7 @@ export const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
             const mappedUser: User = {
                 id: response.user.usuario, // Using username as ID for uniqueness
                 name: response.user.nome || response.user.usuario,
-                role: ['admin', 'developer', 'dev'].includes(response.user.usuario.toLowerCase()) ? 'admin' : 'student',
+                role: response.user.role || (['admin', 'developer', 'dev'].includes(response.user.usuario.toLowerCase()) ? 'admin' : 'student'),
                 xp: response.user.xp || 0
             };
 
@@ -158,28 +157,7 @@ export const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
                     </motion.button>
                 </form>
 
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1.5rem' }}>
-                    <p style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-dim)', marginBottom: '1rem' }}>
-                        Acesso Rápido - Modo Demo
-                    </p>
-                    <div style={{ display: 'grid', gap: '0.8rem' }}>
-                        {users.map((u, i) => (
-                            <motion.button
-                                key={u.id}
-                                className="btn btn-secondary"
-                                onClick={() => onLogin(u)}
-                                style={{ width: '100%', justifyContent: 'center', padding: '0.8rem' }}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.8 + (i * 0.1) }}
-                                whileHover={{ scale: 1.02, backgroundColor: 'var(--glass-hover)' }}
-                                whileTap={{ scale: 0.98 }}
-                            >
-                                Entrar como <strong style={{ marginLeft: '0.5rem', color: u.role === 'admin' ? 'var(--accent)' : 'var(--secondary)' }}>{u.name}</strong>
-                            </motion.button>
-                        ))}
-                    </div>
-                </div>
+                {/* Demo Mode removed as requested */}
             </motion.div>
         </div>
     );

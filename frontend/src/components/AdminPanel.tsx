@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api, type Course, type User } from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ContentManager } from './ContentManager';
 
 interface AdminPanelProps {
     onBack: () => void;
@@ -9,7 +10,7 @@ interface AdminPanelProps {
 export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     const [courses, setCourses] = useState<Course[]>([]);
     const [users, setUsers] = useState<User[]>([]);
-    const [activeTab, setActiveTab] = useState<'create-course' | 'add-lesson' | 'register-user'>('create-course');
+    const [activeTab, setActiveTab] = useState<'create-course' | 'add-lesson' | 'register-user' | 'organize'>('create-course');
 
     // Form States - Create Course
     const [newCourseTitle, setNewCourseTitle] = useState('');
@@ -67,11 +68,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     const handleCreateCourse = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await fetch('http://localhost:3000/courses', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title: newCourseTitle, description: newCourseDesc })
-            });
+            await api.createCourse({ title: newCourseTitle, description: newCourseDesc });
             alert('Curso criado com sucesso!');
             setNewCourseTitle('');
             setNewCourseDesc('');
@@ -110,16 +107,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
                 videoSourceType
             });
 
-            await fetch(`http://localhost:3000/courses/${selectedCourseId}/modules/${selectedModuleId}/lessons`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    title: lessonTitle,
-                    videoUrl: lessonVideoUrl,
-                    content: lessonContent,
-                    quizId
-                })
+            await api.addLesson(selectedCourseId, selectedModuleId, {
+                title: lessonTitle,
+                videoUrl: lessonVideoUrl,
+                content: lessonContent,
+                quizId
             });
+
             alert(`Aula adicionada com sucesso! \nURL do Vídeo: ${lessonVideoUrl}`);
             setLessonTitle('');
             setLessonVideoUrl('');
@@ -130,10 +124,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
                 options: ['', '', ''],
                 correctOptionIndex: 0
             })));
+            loadCourses();
         } catch (error) {
             console.error(error);
-            if (error instanceof TypeError && error.message === 'Failed to fetch') {
-                alert('Não foi possível conectar ao servidor. Verifique se o backend está rodando em http://localhost:3000. \n\nSe você estiver usando Docker, verifique se o container do backend está ativo.');
+            if (error instanceof Error && error.message.includes('Falha')) {
+                alert(`Erro: ${error.message}`);
             } else {
                 alert('Erro ao adicionar aula. Verifique o console para mais detalhes.');
             }
@@ -165,12 +160,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     const ensureModule = async (courseId: string) => {
         const c = courses.find(x => x.id === courseId);
         if (c && c.modules.length === 0) {
-            await fetch(`http://localhost:3000/courses/${courseId}/modules`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title: 'Módulo 1' })
-            });
-            loadCourses();
+            try {
+                await api.addModule(courseId, 'Módulo 1');
+                loadCourses();
+            } catch (e) {
+                console.error("Failed to auto-create module", e);
+            }
         }
     }
 
@@ -221,6 +216,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
                     style={activeTab === 'register-user' ? { boxShadow: '0 0 15px var(--primary-glow)' } : {}}
                 >
                     Cadastrar Colaborador
+                </button>
+                <button
+                    className={`btn ${activeTab === 'organize' ? '' : 'btn-secondary'}`}
+                    onClick={() => setActiveTab('organize')}
+                    style={activeTab === 'organize' ? { boxShadow: '0 0 15px var(--primary-glow)' } : {}}
+                >
+                    Organizar Conteúdo
                 </button>
             </div>
 
@@ -564,6 +566,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
                                 ))}
                             </div>
                         </div>
+                    </motion.div>
+                )}
+
+                {activeTab === 'organize' && (
+                    <motion.div
+                        key="organize"
+                        className="glass-panel"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        transition={{ duration: 0.2 }}
+                        style={{ padding: '0' }}
+                    >
+                        <ContentManager courses={courses} onUpdate={loadCourses} />
                     </motion.div>
                 )}
             </AnimatePresence>

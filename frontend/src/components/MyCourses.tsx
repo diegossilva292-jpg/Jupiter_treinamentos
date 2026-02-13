@@ -20,6 +20,17 @@ export const MyCourses: React.FC<MyCoursesProps> = ({ userId, onSelectLesson, on
             api.getProgress(userId)
         ])
             .then(([coursesData, progressData]) => {
+                console.log('[MyCourses] Loaded courses:', coursesData);
+                console.log('[MyCourses] Total courses:', coursesData.length);
+                coursesData.forEach((course, idx) => {
+                    console.log(`[MyCourses] Course ${idx + 1}: ${course.title}, Modules: ${course.modules.length}`);
+                    course.modules.forEach((module, mIdx) => {
+                        console.log(`  Module ${mIdx + 1}: ${module.title}, Lessons: ${module.lessons.length}`);
+                        module.lessons.forEach((lesson, lIdx) => {
+                            console.log(`    Lesson ${lIdx + 1}: ${lesson.title}, Video: ${lesson.videoUrl}`);
+                        });
+                    });
+                });
                 setCourses(coursesData);
                 setProgressList(progressData);
             })

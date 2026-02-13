@@ -14,17 +14,30 @@ import { AnimatePresence, motion } from 'framer-motion';
 function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
+  const [currentCourseId, setCurrentCourseId] = useState<string | null>(null);
+  const [currentModuleId, setCurrentModuleId] = useState<string | null>(null);
   const [view, setView] = useState<'dashboard' | 'courses' | 'ranking' | 'admin-panel' | 'certificates'>('dashboard');
 
   // ... (rest of authentication state and Login handler same as before)
-  // Fake Authentication State
-  const [users, setUsers] = useState<User[]>([]);
 
   useEffect(() => {
-    api.getUsers().then(setUsers);
+    // Restore session
+    const token = localStorage.getItem('authToken');
+    const savedUser = localStorage.getItem('user');
+    if (token && savedUser) {
+      try {
+        setCurrentUser(JSON.parse(savedUser));
+      } catch (e) {
+        console.error('Failed to parse saved user', e);
+        localStorage.removeItem('user');
+      }
+    }
+
+    // No longer fetching users for login screen
   }, []);
 
   const handleLogin = (user: User) => {
+    localStorage.setItem('user', JSON.stringify(user));
     setCurrentUser(user);
     setView('dashboard');
   };
@@ -34,7 +47,11 @@ function App() {
     const course = courses.find(c => c.id === courseId);
     const module = course?.modules.find(m => m.id === moduleId);
     const lesson = module?.lessons.find(l => l.id === lessonId);
-    if (lesson) setCurrentLesson(lesson);
+    if (lesson) {
+      setCurrentLesson(lesson);
+      setCurrentCourseId(courseId);
+      setCurrentModuleId(moduleId);
+    }
   };
 
   const handleCompleteVideo = async () => {
@@ -47,11 +64,17 @@ function App() {
       alert('Aula concluída! Progresso salvo.');
       const updatedUsers = await api.getUsers();
       const me = updatedUsers.find(u => u.id === currentUser.id);
-      if (me) setCurrentUser({ ...me, name: currentUser.name });
+      if (me) {
+        const updatedMe = { ...me, name: currentUser.name };
+        setCurrentUser(updatedMe);
+        localStorage.setItem('user', JSON.stringify(updatedMe));
+      }
     }
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
     setCurrentUser(null);
     setCurrentLesson(null);
     setView('dashboard');
@@ -63,7 +86,7 @@ function App() {
       <div style={{ position: 'relative', zIndex: 1, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         {!currentUser ? (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Login users={users} onLogin={handleLogin} />
+            <Login onLogin={handleLogin} />
           </div>
         ) : (
           <>
@@ -138,9 +161,12 @@ function App() {
                   {currentLesson ? (
                     <LessonView
                       lesson={currentLesson}
+                      courseId={currentCourseId || ''}
+                      moduleId={currentModuleId || ''}
                       userId={currentUser.id}
                       userName={currentUser.name}
                       onBack={() => { setCurrentLesson(null); }}
+                      onSelectLesson={handleSelectLesson}
                       onCompleteVideo={handleCompleteVideo}
                       onCompleteQuiz={async (score) => {
                         if (currentUser && currentLesson && score >= 4) {
@@ -158,11 +184,7 @@ function App() {
                   ) : view === 'certificates' ? (
                     <CertificatesView currentUser={currentUser} onBack={() => setView('dashboard')} />
                   ) : view === 'courses' ? (
-                    currentUser.role === 'admin' ? (
-                      <Dashboard user={currentUser} onSelectLesson={handleSelectLesson} onNavigate={setView} />
-                    ) : (
-                      <MyCourses userId={currentUser.id} onSelectLesson={handleSelectLesson} onBack={() => setView('dashboard')} onViewCertificate={() => setView('certificates')} />
-                    )
+                    <MyCourses userId={currentUser.id} onSelectLesson={handleSelectLesson} onBack={() => setView('dashboard')} onViewCertificate={() => setView('certificates')} />
                   ) : (
                     <Dashboard user={currentUser} onSelectLesson={handleSelectLesson} onNavigate={setView} />
                   )}

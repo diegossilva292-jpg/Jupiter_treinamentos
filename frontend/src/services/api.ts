@@ -54,6 +54,7 @@ export interface AuthResponse {
         email: string;
         avatar: string;
         xp?: number;
+        role?: 'admin' | 'student';
     };
 }
 
@@ -142,9 +143,71 @@ export const api = {
         });
         return res.json();
     },
+    // Admin Methods
+    createCourse: async (data: { title: string, description: string }): Promise<Course> => {
+        const res = await fetch(`${API_URL}/courses`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getToken()}`
+            },
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error(`Falha ao criar curso: ${res.statusText}`);
+        return res.json();
+    },
+    addModule: async (courseId: string, title: string): Promise<CourseModule> => {
+        const res = await fetch(`${API_URL}/courses/${courseId}/modules`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getToken()}`
+            },
+            body: JSON.stringify({ title }),
+        });
+        if (!res.ok) throw new Error(`Falha ao criar módulo: ${res.statusText}`);
+        return res.json();
+    },
+    addLesson: async (courseId: string, moduleId: string, data: any): Promise<Lesson> => {
+        const res = await fetch(`${API_URL}/courses/${courseId}/modules/${moduleId}/lessons`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getToken()}`
+            },
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error(`Falha ao adicionar aula: ${res.statusText}`);
+        return res.json();
+    },
+    reorderModules: async (courseId: string, moduleIds: string[]): Promise<void> => {
+        const res = await fetch(`${API_URL}/courses/${courseId}/modules/reorder`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getToken()}`
+            },
+            body: JSON.stringify({ moduleIds }),
+        });
+        if (!res.ok) throw new Error(`Falha ao reordenar módulos: ${res.statusText}`);
+    },
+    reorderLessons: async (courseId: string, moduleId: string, lessonIds: string[]): Promise<void> => {
+        const res = await fetch(`${API_URL}/courses/${courseId}/modules/${moduleId}/lessons/reorder`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getToken()}`
+            },
+            body: JSON.stringify({ lessonIds }),
+        });
+        if (!res.ok) throw new Error(`Falha ao reordenar aulas: ${res.statusText}`);
+    },
     deleteCourse: async (id: string): Promise<void> => {
         const res = await fetch(`${API_URL}/courses/${id}`, {
             method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${getToken()}`
+            }
         });
         if (!res.ok) {
             throw new Error(`Falha ao excluir curso: ${res.statusText}`);
@@ -153,7 +216,10 @@ export const api = {
     createQuiz: async (quiz: any): Promise<Quiz> => {
         const res = await fetch(`${API_URL}/quizzes`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getToken()}`
+            },
             body: JSON.stringify(quiz),
         });
         return res.json();
@@ -173,6 +239,9 @@ export const api = {
     deleteUser: async (id: string): Promise<void> => {
         const res = await fetch(`${API_URL}/users/${id}`, {
             method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${getToken()}`
+            }
         });
         if (!res.ok) {
             throw new Error(`Falha ao excluir usuário: ${res.statusText}`);
@@ -182,8 +251,13 @@ export const api = {
         const formData = new FormData();
         formData.append('file', file);
 
+        const token = getToken();
+
         const res = await fetch(`${API_URL}/uploads`, {
             method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
             body: formData,
         });
 
