@@ -1,66 +1,90 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { Course } from './entities/course.entity';
-import { FileStoreService } from '../shared/file-store.service';
+import { CourseModule } from './entities/module.entity';
+import { Lesson } from './entities/lesson.entity';
 
 @Injectable()
-export class CoursesService implements OnModuleInit {
-    private courses: Course[] = [];
+export class CoursesService {
+    constructor(
+        @InjectRepository(Course)
+        private courseRepo: Repository<Course>,
+        @InjectRepository(CourseModule)
+        private moduleRepo: Repository<CourseModule>,
+        @InjectRepository(Lesson)
+        private lessonRepo: Repository<Lesson>,
+    ) { }
 
-    constructor(private readonly fileStore: FileStoreService) { }
-
-    onModuleInit() {
-        this.courses = this.fileStore.load<Course[]>('courses.json', []);
+    async findAll(): Promise<Course[]> {
+        return this.courseRepo.find({
+            relations: ['modules', 'modules.lessons'],
+            order: {
+                modules: { order: 'ASC', lessons: { order: 'ASC' } }
+            }
+        });
     }
 
-    private save() {
-        this.fileStore.save('courses.json', this.courses);
+    async findOne(id: string): Promise<Course | null> {
+        return this.courseRepo.findOne({
+            where: { id },
+            relations: ['modules', 'modules.lessons']
+        });
     }
 
-    findAll(): Course[] {
-        return this.courses;
-    }
-
-    findOne(id: string): Course | undefined {
-        return this.courses.find((c) => c.id === id);
-    }
-
-    createCourse(data: Partial<Course>): Course {
-        const newCourse: Course = {
+    async createCourse(data: Partial<Course>): Promise<Course> {
+        const newCourse = this.courseRepo.create({
             id: `c${Date.now()}`,
             title: data.title || 'Novo Curso',
             description: data.description || '',
             modules: []
-        };
-        this.courses.push(newCourse);
-        this.save();
-        return newCourse;
+        });
+        return this.courseRepo.save(newCourse);
     }
 
-    addModule(courseId: string, data: any): any {
-        const course = this.findOne(courseId);
+    async updateCourse(id: string, data: Partial<Course>): Promise<Course | null> {
+        await this.courseRepo.update(id, data);
+        return this.findOne(id);
+    }
+
+    async deleteCourse(id: string): Promise<boolean> {
+        const result = await this.courseRepo.delete(id);
+        return (result.affected ?? 0) > 0;
+    }
+
+    async addModule(courseId: string, data: any): Promise<CourseModule | null> {
+        const course = await this.findOne(courseId);
         if (!course) return null;
 
-        const newModule = {
+        const newModule = this.moduleRepo.create({
             id: `m${Date.now()}`,
             title: data.title || 'Novo Módulo',
             description: data.description || '',
             courseId: courseId,
             order: course.modules.length + 1,
             lessons: []
-        };
-        course.modules.push(newModule);
-        this.save();
-        return newModule;
+        });
+        return this.moduleRepo.save(newModule);
     }
 
-    addLesson(courseId: string, moduleId: string, data: any): any {
-        const course = this.findOne(courseId);
-        if (!course) return null;
+    async updateModule(courseId: string, moduleId: string, data: any): Promise<CourseModule | null> {
+        await this.moduleRepo.update(moduleId, data);
+        return this.moduleRepo.findOne({ where: { id: moduleId }, relations: ['lessons'] });
+    }
 
-        const module = course.modules.find(m => m.id === moduleId);
+    async deleteModule(courseId: string, moduleId: string): Promise<boolean> {
+        const result = await this.moduleRepo.delete(moduleId);
+        return (result.affected ?? 0) > 0;
+    }
+
+    async addLesson(courseId: string, moduleId: string, data: any): Promise<Lesson | null> {
+        const module = await this.moduleRepo.findOne({
+            where: { id: moduleId },
+            relations: ['lessons']
+        });
         if (!module) return null;
 
-        const newLesson = {
+        const newLesson = this.lessonRepo.create({
             id: `l${Date.now()}`,
             title: data.title || 'Nova Aula',
             videoUrl: data.videoUrl || '',
@@ -68,137 +92,29 @@ export class CoursesService implements OnModuleInit {
             order: module.lessons.length + 1,
             moduleId: moduleId,
             quizId: data.quizId || undefined
-        };
-        module.lessons.push(newLesson);
-        this.save();
-        return newLesson;
+        });
+        return this.lessonRepo.save(newLesson);
     }
 
-    deleteCourse(id: string): boolean {
-        const index = this.courses.findIndex(c => c.id === id);
-        if (index !== -1) {
-            this.courses.splice(index, 1);
-            this.save();
-            return true;
+    async updateLesson(courseId: string, moduleId: string, lessonId: string, data: any): Promise<Lesson | null> {
+        await this.lessonRepo.update(lessonId, data);
+        return this.lessonRepo.findOne({ where: { id: lessonId } });
+    }
+
+    async deleteLesson(courseId: string, moduleId: string, lessonId: string): Promise<boolean> {
+        const result = await this.lessonRepo.delete(lessonId);
+        return (result.affected ?? 0) > 0;
+    }
+
+    async reorderModules(courseId: string, moduleIds: string[]): Promise<void> {
+        for (let i = 0; i < moduleIds.length; i++) {
+            await this.moduleRepo.update(moduleIds[i], { order: i + 1 });
         }
-        return false;
     }
 
-    reorderModules(courseId: string, moduleIds: string[]): boolean {
-        const course = this.findOne(courseId);
-        if (!course) return false;
-
-        const modulesMap = new Map(course.modules.map(m => [m.id, m]));
-        const newModules = moduleIds.map(id => modulesMap.get(id)).filter((m): m is any => !!m);
-
-        if (newModules.length !== course.modules.length) {
-            // Handle case where some modules might be missing or ids are wrong
-            // For now, valid ids take precedence, remaining appended? 
-            // Simpler: Just rely on the passed IDs if they match the count, or just reorder what is passed.
-            // Better strategy: Reconstruct the array based on IDs. Appending any missing ones at the end.
-            const remaining = course.modules.filter(m => !moduleIds.includes(m.id));
-            course.modules = [...newModules, ...remaining];
-        } else {
-            course.modules = newModules;
+    async reorderLessons(courseId: string, moduleId: string, lessonIds: string[]): Promise<void> {
+        for (let i = 0; i < lessonIds.length; i++) {
+            await this.lessonRepo.update(lessonIds[i], { order: i + 1 });
         }
-
-        // Update order index
-        course.modules.forEach((m, index) => m.order = index + 1);
-        this.save();
-        return true;
-    }
-
-    reorderLessons(courseId: string, moduleId: string, lessonIds: string[]): boolean {
-        const course = this.findOne(courseId);
-        if (!course) return false;
-
-        const module = course.modules.find(m => m.id === moduleId);
-        if (!module) return false;
-
-        const lessonsMap = new Map(module.lessons.map(l => [l.id, l]));
-        const newLessons = lessonIds.map(id => lessonsMap.get(id)).filter((l): l is any => !!l);
-
-        const remaining = module.lessons.filter(l => !lessonIds.includes(l.id));
-        module.lessons = [...newLessons, ...remaining];
-
-        // Update order index
-        module.lessons.forEach((l, index) => l.order = index + 1);
-        this.save();
-        return true;
-    }
-
-    updateCourse(courseId: string, updateData: Partial<Course>): Course | null {
-        const course = this.findOne(courseId);
-        if (!course) return null;
-
-        if (updateData.title) course.title = updateData.title;
-        if (updateData.description !== undefined) course.description = updateData.description;
-
-        this.save();
-        return course;
-    }
-
-    updateModule(courseId: string, moduleId: string, updateData: any): any {
-        const course = this.findOne(courseId);
-        if (!course) return null;
-
-        const module = course.modules.find(m => m.id === moduleId);
-        if (!module) return null;
-
-        if (updateData.title) module.title = updateData.title;
-        if (updateData.description !== undefined) module.description = updateData.description;
-
-        this.save();
-        return module;
-    }
-
-    deleteModule(courseId: string, moduleId: string): boolean {
-        const course = this.findOne(courseId);
-        if (!course) return false;
-
-        const index = course.modules.findIndex(m => m.id === moduleId);
-        if (index === -1) return false;
-
-        course.modules.splice(index, 1);
-        // Update order for remaining modules
-        course.modules.forEach((m, idx) => m.order = idx + 1);
-        this.save();
-        return true;
-    }
-
-    updateLesson(courseId: string, moduleId: string, lessonId: string, updateData: any): any {
-        const course = this.findOne(courseId);
-        if (!course) return null;
-
-        const module = course.modules.find(m => m.id === moduleId);
-        if (!module) return null;
-
-        const lesson = module.lessons.find(l => l.id === lessonId);
-        if (!lesson) return null;
-
-        if (updateData.title) lesson.title = updateData.title;
-        if (updateData.videoUrl) lesson.videoUrl = updateData.videoUrl;
-        if (updateData.content !== undefined) lesson.content = updateData.content;
-        if (updateData.quizId !== undefined) lesson.quizId = updateData.quizId;
-
-        this.save();
-        return lesson;
-    }
-
-    deleteLesson(courseId: string, moduleId: string, lessonId: string): boolean {
-        const course = this.findOne(courseId);
-        if (!course) return false;
-
-        const module = course.modules.find(m => m.id === moduleId);
-        if (!module) return false;
-
-        const index = module.lessons.findIndex(l => l.id === lessonId);
-        if (index === -1) return false;
-
-        module.lessons.splice(index, 1);
-        // Update order for remaining lessons
-        module.lessons.forEach((l, idx) => l.order = idx + 1);
-        this.save();
-        return true;
     }
 }

@@ -1,25 +1,27 @@
-export class Lesson {
-    id: string;
-    title: string;
-    videoUrl: string;
-    content?: string;
-    order: number;
-    quizId?: string;
-    moduleId: string;
-}
+import { Entity, Column, PrimaryColumn, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { CourseModule } from './module.entity';
+import { Certificate } from '../../certificates/entities/certificate.entity';
 
-export class CourseModule {
-    id: string;
-    title: string;
-    description: string;
-    order: number;
-    courseId: string;
-    lessons: Lesson[];
-}
-
+@Entity('courses')
 export class Course {
+    @PrimaryColumn()
     id: string;
+
+    @Column()
     title: string;
+
+    @Column({ type: 'text' })
     description: string;
+
+    @OneToMany(() => CourseModule, module => module.course, { cascade: true, eager: true })
     modules: CourseModule[];
+
+    @OneToMany(() => Certificate, certificate => certificate.course)
+    certificates: Certificate[];
+
+    @CreateDateColumn()
+    createdAt: Date;
+
+    @UpdateDateColumn()
+    updatedAt: Date;
 }
