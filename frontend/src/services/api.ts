@@ -1,4 +1,5 @@
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3336';
+export const AUTH_API_URL = import.meta.env.VITE_AUTH_API_URL || API_URL;
 
 export interface User {
     id: string;
@@ -96,7 +97,7 @@ export const api = {
         return res.json();
     },
     login: async (usuario: string, senha: string): Promise<AuthResponse> => {
-        const res = await fetch(`${API_URL}/action/Usuario/logar`, {
+        const res = await fetch(`${AUTH_API_URL}/action/Usuario/logar`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
