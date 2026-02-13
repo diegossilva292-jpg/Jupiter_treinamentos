@@ -81,6 +81,10 @@ export const api = {
         const res = await fetch(`${API_URL}/users/${id}`);
         return res.json();
     },
+    getUserById: async (id: string): Promise<User> => {
+        const res = await fetch(`${API_URL}/users/${id}`);
+        return res.json();
+    },
     updateXP: async (userId: string, amount: number): Promise<void> => {
         await fetch(`${API_URL}/users/${userId}/xp`, {
             method: 'POST',
