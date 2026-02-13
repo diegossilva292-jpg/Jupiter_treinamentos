@@ -121,12 +121,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl, onEnded, onP
                     if (onProgress) {
                         onProgress(percent);
                     }
-
-                    // Auto-complete at 90%
-                    if (percent >= 90 && percent < 95) {
-                        console.log('[VideoPlayer] 90% watched, marking as complete');
-                        onEnded();
-                    }
                 }
             }
         }, 2000); // Check every 2 seconds

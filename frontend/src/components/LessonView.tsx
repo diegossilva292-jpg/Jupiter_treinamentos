@@ -81,9 +81,19 @@ export const LessonView: React.FC<LessonViewProps> = ({ lesson, courseId, module
         }
     }, [courseId, moduleId]);
 
-    const handleVideoEnded = () => {
-        setQuizVisible(true);
-        onCompleteVideo();
+    const handleVideoEnded = async () => {
+        // Mark lesson as completed silently
+        await onCompleteVideo();
+
+        // Auto-advance to next lesson if available
+        if (hasNext && currentModule) {
+            const nextLesson = currentModule.lessons[currentLessonIndex + 1];
+            onSelectLesson(courseId, moduleId, nextLesson.id);
+        }
+        // If there's a quiz and no next lesson, show the quiz
+        else if (lesson.quizId) {
+            setQuizVisible(true);
+        }
     };
 
     // Find current lesson index and determine next/previous
