@@ -1,4 +1,24 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: jupiter-postgres
+    environment:
+      POSTGRES_DB: jupiter_treinamentos
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
   backend:
     build: ./backend
     container_name: jupiter-backend
@@ -9,9 +29,19 @@ services:
       - FLUSSONIC_USER=${FLUSSONIC_USER}
       - FLUSSONIC_PASSWORD=${FLUSSONIC_PASSWORD}
       - FLUSSONIC_VOD_NAME=${FLUSSONIC_VOD_NAME}
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=jupiter_treinamentos
     volumes:
       - ./backend/data:/usr/src/app/data
     command: node dist/main.js
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
     restart: always
 
   frontend:
@@ -21,4 +51,13 @@ services:
       - "3337:80"
     depends_on:
       - backend
+    networks:
+      - app-network
     restart: always
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

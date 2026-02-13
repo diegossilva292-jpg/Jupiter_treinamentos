@@ -28,6 +28,14 @@
             "moduleId": "m1770928756724"
           }
         ]
+      },
+      {
+        "id": "m1770962614552",
+        "title": "Módulo 2",
+        "description": "",
+        "courseId": "c1770928752915",
+        "order": 2,
+        "lessons": []
       }
     ]
   }

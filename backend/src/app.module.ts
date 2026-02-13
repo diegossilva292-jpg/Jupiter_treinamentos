@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CoursesController } from './courses/courses.controller';
@@ -17,6 +18,18 @@ import { UploadsModule } from './uploads/uploads.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT) || 5432,
+      username: process.env.DB_USER || 'postgres',
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME || 'jupiter_treinamentos',
+      entities: [__dirname + '/**/*.entity{.ts,.js}'],
+      synchronize: true, // DEV only! Disable in production
+      logging: ['error', 'warn'], // Log only errors and warnings
+      autoLoadEntities: true,
+    }),
     SharedModule,
     QuizzesModule,
     CertificatesModule,
