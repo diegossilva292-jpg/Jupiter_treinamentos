@@ -64,7 +64,7 @@ export const ContentManager: React.FC<ContentManagerProps> = ({ courses, onUpdat
         // but we could locally mutate for instant feedback.
 
         try {
-            await api.reorderModules(selectedCourse.id, newOrder.map(m => m.id));
+            await api.reorderModules(selectedCourse.id, newOrder.map((m: any) => m.id));
             onUpdate();
         } catch (error) {
             console.error("Failed to reorder modules", error);
@@ -138,7 +138,7 @@ export const ContentManager: React.FC<ContentManagerProps> = ({ courses, onUpdat
                                                 <span style={{ fontWeight: 'bold' }}>{module.title}</span>
                                             </div>
                                             <button
-                                                onClick={(e) => { e.stopPropagation(); toggleModule(module.id); }} // Stop propagation so we don't trigger drag
+                                                onClick={(e: React.MouseEvent) => { e.stopPropagation(); toggleModule(module.id); }} // Stop propagation so we don't trigger drag
                                                 onPointerDown={e => e.stopPropagation()} // Important for dnd-kit
                                                 className="btn btn-secondary"
                                                 style={{ padding: '0.3rem 0.8rem', fontSize: '0.9rem' }}
@@ -150,7 +150,7 @@ export const ContentManager: React.FC<ContentManagerProps> = ({ courses, onUpdat
                                         {expandedModules.has(module.id) && (
                                             <div style={{ marginTop: '1rem', paddingLeft: '2rem', borderLeft: '2px solid var(--glass-border)' }}>
                                                 <h4 style={{ color: 'var(--text-muted)', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Aulas</h4>
-                                                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEndLesson(e, module.id)}>
+                                                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e: DragEndEvent) => handleDragEndLesson(e, module.id)}>
                                                     <SortableContext items={module.lessons.map(l => l.id)} strategy={verticalListSortingStrategy}>
                                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                                             {module.lessons.length > 0 ? module.lessons.map(lesson => (

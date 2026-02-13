@@ -22,6 +22,7 @@ export const LessonView: React.FC<LessonViewProps> = ({ lesson, courseId, module
     const [quizVisible, setQuizVisible] = React.useState(false);
     const [isLessonCompleted, setIsLessonCompleted] = React.useState(false);
     const [currentModule, setCurrentModule] = React.useState<CourseModule | null>(null);
+    const [completedLessons, setCompletedLessons] = React.useState<Set<string>>(new Set());
 
     // DEBUG: Log lesson data
     console.log('[LessonView] Rendering lesson:', {
@@ -44,6 +45,14 @@ export const LessonView: React.FC<LessonViewProps> = ({ lesson, courseId, module
                     setQuizVisible(true);
                     setIsLessonCompleted(true);
                 }
+
+                // Track all completed lessons for sidebar indicators
+                const completedIds = new Set(
+                    progressList
+                        .filter(p => p.status === 'COMPLETED')
+                        .map(p => p.lessonId)
+                );
+                setCompletedLessons(completedIds);
             } catch (error) {
                 console.error("Erro ao verificar progresso:", error);
             }
@@ -200,25 +209,48 @@ export const LessonView: React.FC<LessonViewProps> = ({ lesson, courseId, module
                     <div className="glass-panel" style={{ padding: '1.5rem', position: 'sticky', top: '2rem' }}>
                         <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.2rem', color: 'var(--secondary)' }}>{currentModule.title}</h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                            {currentModule.lessons.map((l, idx) => (
-                                <button
-                                    key={l.id}
-                                    className={l.id === lesson.id ? "btn" : "btn btn-secondary"}
-                                    onClick={() => onSelectLesson(courseId, moduleId, l.id)}
-                                    style={{
-                                        justifyContent: 'flex-start',
-                                        padding: '0.75rem 1rem',
-                                        fontSize: '0.9rem',
-                                        opacity: l.id === lesson.id ? 1 : 0.7,
-                                        borderColor: l.id === lesson.id ? 'var(--primary)' : 'transparent'
-                                    }}
-                                >
-                                    <span style={{ marginRight: '0.5rem', fontWeight: 'bold', color: 'var(--secondary)' }}>
-                                        {idx + 1}.
-                                    </span>
-                                    {l.title}
-                                </button>
-                            ))}
+                            {currentModule.lessons.map((l, idx) => {
+                                const isCompleted = completedLessons.has(l.id);
+                                const isCurrent = l.id === lesson.id;
+
+                                return (
+                                    <button
+                                        key={l.id}
+                                        className={isCurrent ? "btn" : "btn btn-secondary"}
+                                        onClick={() => onSelectLesson(courseId, moduleId, l.id)}
+                                        style={{
+                                            justifyContent: 'flex-start',
+                                            padding: '0.75rem 1rem',
+                                            fontSize: '0.9rem',
+                                            opacity: isCurrent ? 1 : 0.7,
+                                            borderColor: isCurrent ? 'var(--primary)' : 'transparent',
+                                            position: 'relative',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.5rem'
+                                        }}
+                                    >
+                                        {/* Completion indicator */}
+                                        {isCompleted && (
+                                            <span style={{
+                                                fontSize: '1.2rem',
+                                                color: '#10b981',
+                                                fontWeight: 'bold'
+                                            }}>
+                                                ✓
+                                            </span>
+                                        )}
+
+                                        <span style={{ marginRight: '0.5rem', fontWeight: 'bold', color: 'var(--secondary)' }}>
+                                            {idx + 1}.
+                                        </span>
+
+                                        <span style={{ flex: 1, textAlign: 'left' }}>
+                                            {l.title}
+                                        </span>
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
                 </motion.div>
