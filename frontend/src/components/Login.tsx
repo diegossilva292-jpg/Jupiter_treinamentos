@@ -21,13 +21,23 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             const response = await api.login(email, password);
 
             // Map external response to internal User structure
-            // Defaulting to Basic Role since API doesn't return role yet
             const mappedUser: User = {
                 id: response.user.usuario, // Using username as ID for uniqueness
                 name: response.user.nome || response.user.usuario,
-                role: response.user.role || (['admin', 'developer', 'dev'].includes(response.user.usuario.toLowerCase()) ? 'admin' : 'student'),
+                role: 'student', // Default, will be overwritten below
                 xp: response.user.xp || 0
             };
+
+            // Fetch user from PostgreSQL database to get correct role
+            try {
+                const dbUser = await api.getUserById(mappedUser.id);
+                if (dbUser) {
+                    mappedUser.role = dbUser.role;
+                    mappedUser.xp = dbUser.xp;
+                }
+            } catch (err) {
+                console.warn('Could not fetch user from database, using external API role', err);
+            }
 
             setToken(response.accessToken);
 
