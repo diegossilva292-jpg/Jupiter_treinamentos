@@ -142,8 +142,26 @@ export class MigrationService {
         }
 
         const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        let migrated = 0;
+        let skipped = 0;
 
         for (const progressData of data) {
+            // Validate user exists
+            const userExists = await this.userRepo.findOne({ where: { id: progressData.userId } });
+            if (!userExists) {
+                console.log(`  ⊘ Skipped: userId ${progressData.userId} not found`);
+                skipped++;
+                continue;
+            }
+
+            // Validate lesson exists
+            const lessonExists = await this.lessonRepo.findOne({ where: { id: progressData.lessonId } });
+            if (!lessonExists) {
+                console.log(`  ⊘ Skipped: lessonId ${progressData.lessonId} not found`);
+                skipped++;
+                continue;
+            }
+
             const existing = await this.progressRepo.findOne({
                 where: { userId: progressData.userId, lessonId: progressData.lessonId }
             });
@@ -156,10 +174,11 @@ export class MigrationService {
                     score: progressData.score || 0,
                 }));
                 console.log(`  ✓ Migrated progress for user ${progressData.userId}`);
+                migrated++;
             }
         }
 
-        console.log(`✅ Progress migrated: ${data.length} total\n`);
+        console.log(`✅ Progress migrated: ${migrated} migrated, ${skipped} skipped\n`);
     }
 
     private async migrateCertificates(): Promise<void> {
