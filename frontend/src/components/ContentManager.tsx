@@ -59,10 +59,6 @@ export const ContentManager: React.FC<ContentManagerProps> = ({ courses, onUpdat
 
         const newOrder = arrayMove(selectedCourse.modules, oldIndex, newIndex);
 
-        // Optimistic UI update (optional, but good for UX)
-        // For now, we rely on the API call and parent refresh, 
-        // but we could locally mutate for instant feedback.
-
         try {
             await api.reorderModules(selectedCourse.id, newOrder.map((m: any) => m.id));
             onUpdate();
@@ -93,27 +89,99 @@ export const ContentManager: React.FC<ContentManagerProps> = ({ courses, onUpdat
         }
     }
 
+    // ========== CRUD HANDLERS ==========
+
+    const handleEditModule = async (moduleId: string, currentTitle: string) => {
+        const newTitle = prompt("Novo nome do módulo:", currentTitle);
+        if (!newTitle || !selectedCourse) return;
+
+        try {
+            await api.updateModule(selectedCourse.id, moduleId, { title: newTitle });
+            onUpdate();
+            alert("Módulo atualizado!");
+        } catch (error) {
+            console.error(error);
+            alert("Erro ao atualizar módulo");
+        }
+    };
+
+    const handleDeleteModule = async (moduleId: string, moduleTitle: string) => {
+        if (!confirm(`Tem certeza que deseja deletar o módulo "${moduleTitle}"?`)) return;
+        if (!selectedCourse) return;
+
+        try {
+            await api.deleteModule(selectedCourse.id, moduleId);
+            onUpdate();
+            alert("Módulo deletado!");
+        } catch (error) {
+            console.error(error);
+            alert("Erro ao deletar módulo");
+        }
+    };
+
+    const handleEditLesson = async (moduleId: string, lessonId: string, currentTitle: string, currentVideoUrl: string) => {
+        const newTitle = prompt("Novo título da aula:", currentTitle);
+        if (!newTitle) return;
+
+        const newVideoUrl = prompt("Nova URL do vídeo:", currentVideoUrl);
+        if (!newVideoUrl) return;
+
+        if (!selectedCourse) return;
+
+        try {
+            await api.updateLesson(selectedCourse.id, moduleId, lessonId, {
+                title: newTitle,
+                videoUrl: newVideoUrl
+            });
+            onUpdate();
+            alert("Aula atualizada!");
+        } catch (error) {
+            console.error(error);
+            alert("Erro ao atualizar aula");
+        }
+    };
+
+    const handleDeleteLesson = async (moduleId: string, lessonId: string, lessonTitle: string) => {
+        if (!confirm(`Deletar a aula "${lessonTitle}"?`)) return;
+        if (!selectedCourse) return;
+
+        try {
+            await api.deleteLesson(selectedCourse.id, moduleId, lessonId);
+            onUpdate();
+            alert("Aula deletada!");
+        } catch (error) {
+            console.error(error);
+            alert("Erro ao deletar aula");
+        }
+    };
+
     return (
         <div style={{ padding: '1rem' }}>
             <h2 style={{ color: 'var(--text-main)', marginBottom: '1.5rem' }}>Organizar Conteúdo</h2>
 
             <div style={{ marginBottom: '2rem' }}>
-                <label style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>Selecione o Curso para Organizar</label>
+                <label htmlFor="course-select" style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-main)' }}>
+                    Selecione o Curso
+                </label>
                 <select
+                    id="course-select"
                     value={selectedCourseId}
-                    onChange={e => setSelectedCourseId(e.target.value)}
+                    onChange={(e) => setSelectedCourseId(e.target.value)}
                     style={{
-                        width: '100%',
                         padding: '0.8rem',
                         borderRadius: 'var(--radius-md)',
                         border: '1px solid var(--glass-border)',
-                        background: 'rgba(0,0,0,0.3)',
+                        background: 'rgba(255,255,255,0.05)',
                         color: 'var(--text-main)',
-                        fontSize: '1rem'
+                        fontSize: '1rem',
+                        width: '100%',
+                        maxWidth: '400px'
                     }}
                 >
-                    <option value="" style={{ background: '#1a1b3c' }}>Selecione...</option>
-                    {courses.map(c => <option key={c.id} value={c.id} style={{ background: '#1a1b3c' }}>{c.title}</option>)}
+                    <option value="">-- Escolha o Curso --</option>
+                    {courses.map(course => (
+                        <option key={course.id} value={course.id}>{course.title}</option>
+                    ))}
                 </select>
             </div>
 
@@ -137,14 +205,32 @@ export const ContentManager: React.FC<ContentManagerProps> = ({ courses, onUpdat
                                                 <span style={{ fontSize: '1.2rem', opacity: 0.5 }}>☰</span>
                                                 <span style={{ fontWeight: 'bold' }}>{module.title}</span>
                                             </div>
-                                            <button
-                                                onClick={(e: React.MouseEvent) => { e.stopPropagation(); toggleModule(module.id); }} // Stop propagation so we don't trigger drag
-                                                onPointerDown={e => e.stopPropagation()} // Important for dnd-kit
-                                                className="btn btn-secondary"
-                                                style={{ padding: '0.3rem 0.8rem', fontSize: '0.9rem' }}
-                                            >
-                                                {expandedModules.has(module.id) ? 'Recolher' : 'Expandir Aulas'}
-                                            </button>
+                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                <button
+                                                    onClick={(e: React.MouseEvent) => { e.stopPropagation(); handleEditModule(module.id, module.title); }}
+                                                    onPointerDown={e => e.stopPropagation()}
+                                                    className="btn btn-secondary"
+                                                    style={{ padding: '0.3rem 0.8rem', fontSize: '0.9rem' }}
+                                                >
+                                                    ✏️ Editar
+                                                </button>
+                                                <button
+                                                    onClick={(e: React.MouseEvent) => { e.stopPropagation(); handleDeleteModule(module.id, module.title); }}
+                                                    onPointerDown={e => e.stopPropagation()}
+                                                    className="btn btn-secondary"
+                                                    style={{ padding: '0.3rem 0.8rem', fontSize: '0.9rem', background: '#ef4444' }}
+                                                >
+                                                    🗑️ Deletar
+                                                </button>
+                                                <button
+                                                    onClick={(e: React.MouseEvent) => { e.stopPropagation(); toggleModule(module.id); }}
+                                                    onPointerDown={e => e.stopPropagation()}
+                                                    className="btn btn-secondary"
+                                                    style={{ padding: '0.3rem 0.8rem', fontSize: '0.9rem' }}
+                                                >
+                                                    {expandedModules.has(module.id) ? 'Recolher' : 'Expandir Aulas'}
+                                                </button>
+                                            </div>
                                         </div>
 
                                         {expandedModules.has(module.id) && (
@@ -161,11 +247,32 @@ export const ContentManager: React.FC<ContentManagerProps> = ({ courses, onUpdat
                                                                     cursor: 'grab',
                                                                     display: 'flex',
                                                                     alignItems: 'center',
+                                                                    justifyContent: 'space-between',
                                                                     gap: '0.8rem'
                                                                 }}>
-                                                                    <span style={{ opacity: 0.5 }}>::</span>
-                                                                    <span>{lesson.title}</span>
-                                                                    {lesson.quizId && <span style={{ fontSize: '0.8rem', background: 'var(--primary)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>Quiz</span>}
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                                                                        <span style={{ opacity: 0.5 }}>::</span>
+                                                                        <span>{lesson.title}</span>
+                                                                        {lesson.quizId && <span style={{ fontSize: '0.8rem', background: 'var(--primary)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>Quiz</span>}
+                                                                    </div>
+                                                                    <div style={{ display: 'flex', gap: '0.3rem' }}>
+                                                                        <button
+                                                                            onClick={(e: React.MouseEvent) => { e.stopPropagation(); handleEditLesson(module.id, lesson.id, lesson.title, lesson.videoUrl); }}
+                                                                            onPointerDown={e => e.stopPropagation()}
+                                                                            className="btn btn-secondary"
+                                                                            style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}
+                                                                        >
+                                                                            ✏️
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={(e: React.MouseEvent) => { e.stopPropagation(); handleDeleteLesson(module.id, lesson.id, lesson.title); }}
+                                                                            onPointerDown={e => e.stopPropagation()}
+                                                                            className="btn btn-secondary"
+                                                                            style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', background: '#ef4444' }}
+                                                                        >
+                                                                            🗑️
+                                                                        </button>
+                                                                    </div>
                                                                 </SortableItem>
                                                             )) : (
                                                                 <p style={{ fontStyle: 'italic', opacity: 0.5 }}>Nenhuma aula neste módulo</p>

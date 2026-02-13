@@ -247,6 +247,83 @@ export const api = {
             throw new Error(`Falha ao excluir usuário: ${res.statusText}`);
         }
     },
+
+    // ========== NEW CRUD METHODS ==========
+
+    /**
+     * Update course details
+     */
+    updateCourse: async (courseId: string, data: Partial<Course>): Promise<Course> => {
+        const res = await fetch(`${API_URL}/courses/${courseId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getToken()}`
+            },
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error(`Falha ao atualizar curso: ${res.statusText}`);
+        return res.json();
+    },
+
+    /**
+     * Update module details
+     */
+    updateModule: async (courseId: string, moduleId: string, data: any): Promise<any> => {
+        const res = await fetch(`${API_URL}/courses/${courseId}/modules/${moduleId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getToken()}`
+            },
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error(`Falha ao atualizar módulo: ${res.statusText}`);
+        return res.json();
+    },
+
+    /**
+     * Delete a module
+     */
+    deleteModule: async (courseId: string, moduleId: string): Promise<void> => {
+        const res = await fetch(`${API_URL}/courses/${courseId}/modules/${moduleId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${getToken()}`
+            }
+        });
+        if (!res.ok) throw new Error(`Falha ao deletar módulo: ${res.statusText}`);
+    },
+
+    /**
+     * Update lesson details
+     */
+    updateLesson: async (courseId: string, moduleId: string, lessonId: string, data: any): Promise<any> => {
+        const res = await fetch(`${API_URL}/courses/${courseId}/modules/${moduleId}/lessons/${lessonId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getToken()}`
+            },
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error(`Falha ao atualizar aula: ${res.statusText}`);
+        return res.json();
+    },
+
+    /**
+     * Delete a lesson
+     */
+    deleteLesson: async (courseId: string, moduleId: string, lessonId: string): Promise<void> => {
+        const res = await fetch(`${API_URL}/courses/${courseId}/modules/${moduleId}/lessons/${lessonId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${getToken()}`
+            }
+        });
+        if (!res.ok) throw new Error(`Falha ao deletar aula: ${res.statusText}`);
+    },
+
     uploadVideo: async (file: File): Promise<string> => {
         const formData = new FormData();
         formData.append('file', file);
