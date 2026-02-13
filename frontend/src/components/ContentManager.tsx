@@ -155,6 +155,22 @@ export const ContentManager: React.FC<ContentManagerProps> = ({ courses, onUpdat
         }
     };
 
+    const handleAddModule = async () => {
+        if (!selectedCourse) return;
+
+        const title = prompt("Nome do novo módulo:");
+        if (!title) return;
+
+        try {
+            await api.addModule(selectedCourse.id, { title, description: '' });
+            onUpdate();
+            alert("Módulo criado!");
+        } catch (error) {
+            console.error(error);
+            alert("Erro ao criar módulo");
+        }
+    };
+
     return (
         <div style={{ padding: '1rem' }}>
             <h2 style={{ color: 'var(--text-main)', marginBottom: '1.5rem' }}>Organizar Conteúdo</h2>
@@ -187,7 +203,16 @@ export const ContentManager: React.FC<ContentManagerProps> = ({ courses, onUpdat
 
             {selectedCourse && (
                 <div>
-                    <h3 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>Módulos (Arraste para reordenar)</h3>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <h3 style={{ color: 'var(--primary)', margin: 0 }}>Módulos (Arraste para reordenar)</h3>
+                        <button
+                            onClick={handleAddModule}
+                            className="btn"
+                            style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+                        >
+                            ➕ Adicionar Módulo
+                        </button>
+                    </div>
 
                     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEndModule}>
                         <SortableContext items={selectedCourse.modules.map(m => m.id)} strategy={verticalListSortingStrategy}>

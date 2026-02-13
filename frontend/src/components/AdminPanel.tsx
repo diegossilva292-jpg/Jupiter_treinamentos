@@ -161,7 +161,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
         const c = courses.find(x => x.id === courseId);
         if (c && c.modules.length === 0) {
             try {
-                await api.addModule(courseId, 'Módulo 1');
+                await api.addModule(courseId, { title: 'Módulo 1', description: '' });
                 loadCourses();
             } catch (e) {
                 console.error("Failed to auto-create module", e);

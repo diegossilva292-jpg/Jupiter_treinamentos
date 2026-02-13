@@ -156,14 +156,14 @@ export const api = {
         if (!res.ok) throw new Error(`Falha ao criar curso: ${res.statusText}`);
         return res.json();
     },
-    addModule: async (courseId: string, title: string): Promise<CourseModule> => {
+    addModule: async (courseId: string, data: { title: string; description?: string }): Promise<CourseModule> => {
         const res = await fetch(`${API_URL}/courses/${courseId}/modules`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${getToken()}`
             },
-            body: JSON.stringify({ title }),
+            body: JSON.stringify(data),
         });
         if (!res.ok) throw new Error(`Falha ao criar módulo: ${res.statusText}`);
         return res.json();
