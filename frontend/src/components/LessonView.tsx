@@ -21,8 +21,10 @@ interface LessonViewProps {
 export const LessonView: React.FC<LessonViewProps> = ({ lesson, courseId, moduleId, userId, userName, onBack, onSelectLesson, onCompleteVideo, onCompleteQuiz }) => {
     const [quizVisible, setQuizVisible] = React.useState(false);
     const [isLessonCompleted, setIsLessonCompleted] = React.useState(false);
+    const [course, setCourse] = React.useState<any | null>(null);
     const [currentModule, setCurrentModule] = React.useState<CourseModule | null>(null);
     const [completedLessons, setCompletedLessons] = React.useState<Set<string>>(new Set());
+    const [expandedModules, setExpandedModules] = React.useState<Record<string, boolean>>({});
 
     // DEBUG: Log lesson data
     console.log('[LessonView] Rendering lesson:', {
@@ -68,15 +70,21 @@ export const LessonView: React.FC<LessonViewProps> = ({ lesson, courseId, module
                 const courses = await api.getCourses();
                 const foundCourse = courses.find(c => c.id === courseId);
                 if (foundCourse) {
+                    setCourse(foundCourse);
                     const foundModule = foundCourse.modules.find(m => m.id === moduleId);
                     setCurrentModule(foundModule || null);
+
+                    // Auto-expand current module
+                    if (moduleId) {
+                        setExpandedModules(prev => ({ ...prev, [moduleId]: true }));
+                    }
                 }
             } catch (error) {
                 console.error("Erro ao carregar dados do curso:", error);
             }
         };
 
-        if (courseId && moduleId) {
+        if (courseId) {
             loadCourseData();
         }
     }, [courseId, moduleId]);
@@ -113,6 +121,13 @@ export const LessonView: React.FC<LessonViewProps> = ({ lesson, courseId, module
             const prevLesson = currentModule.lessons[currentLessonIndex - 1];
             onSelectLesson(courseId, moduleId, prevLesson.id);
         }
+    };
+
+    const toggleModule = (modId: string) => {
+        setExpandedModules(prev => ({
+            ...prev,
+            [modId]: !prev[modId]
+        }));
     };
 
     return (
@@ -214,58 +229,102 @@ export const LessonView: React.FC<LessonViewProps> = ({ lesson, courseId, module
             </motion.div>
 
             {/* Sidebar with lesson list */}
-            {currentModule && (
+            {course && (
                 <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    style={{ width: '300px', flexShrink: 0 }}
+                    style={{ width: '350px', flexShrink: 0 }}
                 >
-                    <div className="glass-panel" style={{ padding: '1.5rem', position: 'sticky', top: '2rem' }}>
-                        <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.2rem', color: 'var(--secondary)' }}>{currentModule.title}</h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                            {currentModule.lessons.map((l, idx) => {
-                                const isCompleted = completedLessons.has(l.id);
-                                const isCurrent = l.id === lesson.id;
+                    <div className="glass-panel" style={{ padding: '0', position: 'sticky', top: '2rem', maxHeight: 'calc(100vh - 4rem)', overflowY: 'auto' }}>
 
-                                return (
+                        {course.modules.map((mod: CourseModule) => {
+                            const isExpanded = expandedModules[mod.id];
+                            const isActiveModule = mod.id === moduleId;
+
+                            return (
+                                <div key={mod.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                                     <button
-                                        key={l.id}
-                                        className={isCurrent ? "btn" : "btn btn-secondary"}
-                                        onClick={() => onSelectLesson(courseId, moduleId, l.id)}
+                                        onClick={() => toggleModule(mod.id)}
                                         style={{
-                                            justifyContent: 'flex-start',
-                                            padding: '0.75rem 1rem',
-                                            fontSize: '0.9rem',
-                                            opacity: isCurrent ? 1 : 0.7,
-                                            borderColor: isCurrent ? 'var(--primary)' : 'transparent',
-                                            position: 'relative',
+                                            width: '100%',
                                             display: 'flex',
+                                            justifyContent: 'space-between',
                                             alignItems: 'center',
-                                            gap: '0.5rem'
+                                            padding: '1.2rem',
+                                            background: isActiveModule ? 'rgba(139, 92, 246, 0.1)' : 'transparent',
+                                            border: 'none',
+                                            color: 'white',
+                                            cursor: 'pointer',
+                                            textAlign: 'left',
+                                            fontWeight: 'bold'
                                         }}
                                     >
-                                        {/* Completion indicator */}
-                                        {isCompleted && (
-                                            <span style={{
-                                                fontSize: '1.2rem',
-                                                color: '#10b981',
-                                                fontWeight: 'bold'
-                                            }}>
-                                                ✓
-                                            </span>
-                                        )}
-
-                                        <span style={{ marginRight: '0.5rem', fontWeight: 'bold', color: 'var(--secondary)' }}>
-                                            {idx + 1}.
+                                        <span style={{ color: isActiveModule ? 'var(--primary)' : 'var(--secondary)' }}>
+                                            {mod.title}
                                         </span>
-
-                                        <span style={{ flex: 1, textAlign: 'left' }}>
-                                            {l.title}
+                                        <span style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s' }}>
+                                            ▼
                                         </span>
                                     </button>
-                                );
-                            })}
-                        </div>
+
+                                    {isExpanded && (
+                                        <motion.div
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: 'auto', opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            style={{ overflow: 'hidden', background: 'rgba(0,0,0,0.2)' }}
+                                        >
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', padding: '0.5rem' }}>
+                                                {mod.lessons.map((l, idx) => {
+                                                    const isCompleted = completedLessons.has(l.id);
+                                                    const isCurrent = l.id === lesson.id;
+
+                                                    return (
+                                                        <button
+                                                            key={l.id}
+                                                            className={isCurrent ? "btn" : "btn btn-ghost"}
+                                                            onClick={() => onSelectLesson(courseId, mod.id, l.id)}
+                                                            style={{
+                                                                justifyContent: 'flex-start',
+                                                                padding: '0.75rem 1rem',
+                                                                fontSize: '0.9rem',
+                                                                opacity: isCurrent ? 1 : 0.7,
+                                                                background: isCurrent ? 'var(--primary)' : 'transparent',
+                                                                color: isCurrent ? 'white' : 'var(--text-muted)',
+                                                                borderRadius: '0.5rem',
+                                                                width: '100%',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '0.8rem',
+                                                                textAlign: 'left'
+                                                            }}
+                                                        >
+                                                            {/* Completion indicator */}
+                                                            {isCompleted ? (
+                                                                <span style={{ color: '#10b981', minWidth: '20px' }}>✓</span>
+                                                            ) : (
+                                                                <span style={{
+                                                                    width: '8px',
+                                                                    height: '8px',
+                                                                    borderRadius: '50%',
+                                                                    background: isCurrent ? 'white' : 'rgba(255,255,255,0.2)',
+                                                                    marginLeft: '6px',
+                                                                    marginRight: '6px'
+                                                                }} />
+                                                            )}
+
+                                                            <span style={{ flex: 1 }}>
+                                                                {l.title}
+                                                            </span>
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
                 </motion.div>
             )}
