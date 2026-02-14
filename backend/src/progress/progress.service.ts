@@ -39,7 +39,13 @@ export class ProgressService {
 
         // Check if passed
         if (score >= 4 || forceComplete) {
+            const wasAlreadyCompleted = progress.status === 'COMPLETED';
             progress.status = 'COMPLETED';
+
+            if (!wasAlreadyCompleted) {
+                await this.usersService.updateXp(userId, 10);
+                console.log(`[Progress] Awarded 10 XP to user ${userId} for completing lesson ${lessonId}`);
+            }
 
             // Check for Course Completion
             await this.checkAndIssueCertificate(userId, lessonId);
