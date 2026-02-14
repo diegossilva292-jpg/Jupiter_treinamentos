@@ -106,20 +106,41 @@ export const LessonView: React.FC<LessonViewProps> = ({ lesson, courseId, module
 
     // Find current lesson index and determine next/previous
     const currentLessonIndex = currentModule?.lessons.findIndex(l => l.id === lesson.id) ?? -1;
-    const hasNext = currentModule && currentLessonIndex < currentModule.lessons.length - 1;
-    const hasPrevious = currentLessonIndex > 0;
+    const currentModuleIndex = course?.modules.findIndex((m: CourseModule) => m.id === moduleId) ?? -1;
+
+    const hasNextLessonInModule = currentModule && currentLessonIndex < currentModule.lessons.length - 1;
+    const hasNextModule = course && currentModuleIndex < course.modules.length - 1;
+    const hasNext = hasNextLessonInModule || hasNextModule;
+
+    const hasPreviousLessonInModule = currentLessonIndex > 0;
+    const hasPreviousModule = currentModuleIndex > 0;
+    const hasPrevious = hasPreviousLessonInModule || hasPreviousModule;
 
     const goToNextLesson = () => {
-        if (hasNext && currentModule) {
+        if (hasNextLessonInModule && currentModule) {
             const nextLesson = currentModule.lessons[currentLessonIndex + 1];
             onSelectLesson(courseId, moduleId, nextLesson.id);
+        } else if (hasNextModule && course) {
+            const nextModule = course.modules[currentModuleIndex + 1];
+            if (nextModule.lessons.length > 0) {
+                onSelectLesson(courseId, nextModule.id, nextModule.lessons[0].id);
+                // Expand next module
+                setExpandedModules(prev => ({ ...prev, [nextModule.id]: true }));
+            }
         }
     };
 
     const goToPreviousLesson = () => {
-        if (hasPrevious && currentModule) {
+        if (hasPreviousLessonInModule && currentModule) {
             const prevLesson = currentModule.lessons[currentLessonIndex - 1];
             onSelectLesson(courseId, moduleId, prevLesson.id);
+        } else if (hasPreviousModule && course) {
+            const prevModule = course.modules[currentModuleIndex - 1];
+            if (prevModule.lessons.length > 0) {
+                const lastLesson = prevModule.lessons[prevModule.lessons.length - 1];
+                onSelectLesson(courseId, prevModule.id, lastLesson.id);
+                setExpandedModules(prev => ({ ...prev, [prevModule.id]: true }));
+            }
         }
     };
 
@@ -158,19 +179,17 @@ export const LessonView: React.FC<LessonViewProps> = ({ lesson, courseId, module
                         onEnded={handleVideoEnded}
                     />
 
-                    {/* Manual completion button for Flussonic videos */}
-                    {lesson.videoUrl.includes('.m3u8') && !quizVisible && (
+                    {/* Manual completion button for all videos */}
+                    {!quizVisible && (
                         <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
                             <button
                                 className="btn"
                                 onClick={handleVideoEnded}
                                 style={{ padding: '0.75rem 2rem' }}
                             >
-                                ✓ Marcar Vídeo como Assistido
+                                ✓ Marcar Aula como Concluída
                             </button>
-                            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-                                Clique após assistir o vídeo completo
-                            </p>
+                            {/* Removed text instruction as button is self-explanatory */}
                         </div>
                     )}
 

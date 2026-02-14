@@ -58,11 +58,10 @@ function App() {
   const handleCompleteVideo = async () => {
     if (currentUser && currentLesson) {
       if (currentLesson.quizId) {
-        alert('Vídeo concluído! Agora responda ao Quiz para finalizar a aula (Mínimo 4 acertos).');
         return;
       }
       await api.markProgress(currentUser.id, currentLesson.id);
-      alert('Aula concluída! Progresso salvo.');
+      // Alert removed as per user request
       const updatedUsers = await api.getUsers();
       const me = updatedUsers.find(u => u.id === currentUser.id);
       if (me) {
