@@ -6,12 +6,14 @@ export interface User {
     name: string;
     role: 'admin' | 'student';
     xp?: number;
+    category?: string;
 }
 
 export interface Course {
     id: string;
     title: string;
     description: string;
+    categories?: string[];
     modules: CourseModule[];
 }
 
@@ -131,6 +133,17 @@ export const api = {
     getCourses: async (): Promise<Course[]> => {
         const res = await fetch(`${API_URL}/courses`);
         return res.json();
+    },
+    getCoursesForUser: async (userId: string): Promise<Course[]> => {
+        const res = await fetch(`${API_URL}/courses/user/${userId}`);
+        return res.json();
+    },
+    updateUserCategory: async (userId: string, category: string): Promise<void> => {
+        await fetch(`${API_URL}/users/${userId}/category`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ category }),
+        });
     },
     markProgress: async (userId: string, lessonId: string): Promise<Progress> => {
         const res = await fetch(`${API_URL}/progress`, {
