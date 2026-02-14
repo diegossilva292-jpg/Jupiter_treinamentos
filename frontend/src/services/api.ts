@@ -162,7 +162,7 @@ export const api = {
         return res.json();
     },
     // Admin Methods
-    createCourse: async (data: { title: string, description: string }): Promise<Course> => {
+    createCourse: async (data: { title: string, description: string, categories?: string[] }): Promise<Course> => {
         const res = await fetch(`${API_URL}/courses`, {
             method: 'POST',
             headers: {

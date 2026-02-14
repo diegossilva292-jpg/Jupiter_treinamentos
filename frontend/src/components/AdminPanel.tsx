@@ -7,6 +7,15 @@ interface AdminPanelProps {
     onBack: () => void;
 }
 
+const CATEGORIES = [
+    "Técnico de Campo",
+    "Suporte Técnico",
+    "Marketing",
+    "Vendas",
+    "Administrativo",
+    "Gerência"
+];
+
 export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     const [courses, setCourses] = useState<Course[]>([]);
     const [users, setUsers] = useState<User[]>([]);
@@ -15,6 +24,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     // Form States - Create Course
     const [newCourseTitle, setNewCourseTitle] = useState('');
     const [newCourseDesc, setNewCourseDesc] = useState('');
+    const [newCourseCategories, setNewCourseCategories] = useState<string[]>([]);
 
     // Form States - Add Lesson
     const [selectedCourseId, setSelectedCourseId] = useState('');
@@ -28,6 +38,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     // Form States - Register User
     const [newUserName, setNewUserName] = useState('');
     const [newUserRole, setNewUserRole] = useState<'admin' | 'student'>('student');
+    const [newUserCategory, setNewUserCategory] = useState<string>('');
 
     // Quiz State
     const [includeQuiz, setIncludeQuiz] = useState(false);
@@ -68,10 +79,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     const handleCreateCourse = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await api.createCourse({ title: newCourseTitle, description: newCourseDesc });
+            await api.createCourse({
+                title: newCourseTitle,
+                description: newCourseDesc,
+                categories: newCourseCategories.length > 0 ? newCourseCategories : undefined
+            });
             alert('Curso criado com sucesso!');
             setNewCourseTitle('');
             setNewCourseDesc('');
+            setNewCourseCategories([]);
             loadCourses();
         } catch (error) {
             console.error(error);
@@ -141,11 +157,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
             await api.createUser({
                 name: newUserName,
                 role: newUserRole,
-                xp: 0
+                xp: 0,
+                category: newUserCategory || undefined
             });
             alert('Usuário cadastrado com sucesso!');
             setNewUserName('');
             setNewUserRole('student');
+            setNewUserCategory('');
             loadUsers();
         } catch (error) {
             console.error(error);
@@ -181,6 +199,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
         boxSizing: 'border-box' as const,
         transition: 'border-color 0.2s',
         fontSize: '1rem'
+    };
+
+    const toggleCategory = (cat: string) => {
+        if (newCourseCategories.includes(cat)) {
+            setNewCourseCategories(newCourseCategories.filter(c => c !== cat));
+        } else {
+            setNewCourseCategories([...newCourseCategories, cat]);
+        }
     };
 
     return (
@@ -265,6 +291,32 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
                                     onBlur={e => e.currentTarget.style.borderColor = 'var(--glass-border)'}
                                 />
                             </div>
+
+                            <div>
+                                <label style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>Categorias permitidas (Opcional)</label>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                    {CATEGORIES.map(cat => (
+                                        <button
+                                            key={cat}
+                                            type="button"
+                                            onClick={() => toggleCategory(cat)}
+                                            style={{
+                                                padding: '0.4rem 0.8rem',
+                                                borderRadius: '20px',
+                                                border: newCourseCategories.includes(cat) ? '1px solid var(--primary)' : '1px solid var(--glass-border)',
+                                                background: newCourseCategories.includes(cat) ? 'rgba(139, 92, 246, 0.3)' : 'transparent',
+                                                color: 'var(--text-main)',
+                                                fontSize: '0.85rem',
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            {cat} {newCourseCategories.includes(cat) && '✓'}
+                                        </button>
+                                    ))}
+                                </div>
+                                <small style={{ color: 'var(--text-muted)', display: 'block', marginTop: '0.3rem' }}>* Se nenhuma for selecionada, o curso aparecerá para todos.</small>
+                            </div>
+
                             <button type="submit" className="btn" style={{ alignSelf: 'flex-start', padding: '0.8rem 2rem' }}>Criar Curso</button>
                         </form>
 
@@ -272,24 +324,35 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
                             <h3 style={{ color: 'var(--text-main)' }}>Cursos Existentes</h3>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
                                 {courses.map(course => (
-                                    <div key={course.id} style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span style={{ fontWeight: 'bold' }}>{course.title}</span>
-                                        <button
-                                            onClick={async () => {
-                                                if (window.confirm(`Tem certeza que deseja excluir o curso "${course.title}"?`)) {
-                                                    try {
-                                                        await api.deleteCourse(course.id);
-                                                        loadCourses();
-                                                    } catch (error) {
-                                                        console.error('Erro ao excluir:', error);
-                                                        alert('Erro ao excluir o curso. Verifique o console para mais detalhes.');
+                                    <div key={course.id} style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--glass-border)' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                            <span style={{ fontWeight: 'bold' }}>{course.title}</span>
+                                            <button
+                                                onClick={async () => {
+                                                    if (window.confirm(`Tem certeza que deseja excluir o curso "${course.title}"?`)) {
+                                                        try {
+                                                            await api.deleteCourse(course.id);
+                                                            loadCourses();
+                                                        } catch (error) {
+                                                            console.error('Erro ao excluir:', error);
+                                                            alert('Erro ao excluir o curso. Verifique o console para mais detalhes.');
+                                                        }
                                                     }
-                                                }
-                                            }}
-                                            style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', border: 'none', padding: '0.4rem 0.8rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer' }}
-                                        >
-                                            Excluir
-                                        </button>
+                                                }}
+                                                style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', border: 'none', padding: '0.4rem 0.8rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer' }}
+                                            >
+                                                Excluir
+                                            </button>
+                                        </div>
+                                        {course.categories && course.categories.length > 0 && (
+                                            <div style={{ marginTop: '0.5rem', display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
+                                                {course.categories.map(cat => (
+                                                    <span key={cat} style={{ fontSize: '0.7rem', background: 'rgba(255,255,255,0.1)', padding: '0.2rem 0.5rem', borderRadius: '10px' }}>
+                                                        {cat}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>
@@ -307,6 +370,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
                         transition={{ duration: 0.2 }}
                         style={{ padding: '2rem' }}
                     >
+                        {/* same content as before, but ensure it's preserved */}
                         <h2 style={{ marginTop: 0, marginBottom: '1.5rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '1rem' }}>Adicionar Aula a um Curso</h2>
                         <form onSubmit={handleAddLesson} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
                             <div>
@@ -532,6 +596,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
                                     <option value="admin" style={{ background: '#1a1b3c' }}>Administrador / Desenvolvedor</option>
                                 </select>
                             </div>
+
+                            <div>
+                                <label style={{ color: 'var(--text-muted)' }}>Categoria Profissional</label>
+                                <select
+                                    value={newUserCategory}
+                                    onChange={e => setNewUserCategory(e.target.value)}
+                                    style={inputStyle}
+                                >
+                                    <option value="" style={{ background: '#1a1b3c' }}>Selecione um perfil...</option>
+                                    {CATEGORIES.map(cat => (
+                                        <option key={cat} value={cat} style={{ background: '#1a1b3c' }}>{cat}</option>
+                                    ))}
+                                </select>
+                            </div>
+
                             <button type="submit" className="btn" style={{ alignSelf: 'flex-start', padding: '0.8rem 2rem' }}>
                                 Cadastrar
                             </button>
@@ -545,6 +624,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
                                         <div>
                                             <span style={{ fontWeight: 'bold', display: 'block' }}>{user.name}</span>
                                             <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{user.role === 'admin' ? 'Administrador' : 'Aluno'} | XP: {user.xp || 0}</span>
+                                            {user.category && (
+                                                <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--primary)', marginTop: '0.2rem' }}>{user.category}</span>
+                                            )}
                                         </div>
                                         <button
                                             onClick={async () => {

@@ -3,10 +3,11 @@ import { api, type Lesson, type User } from './services/api';
 import { Dashboard } from './components/Dashboard';
 import { LessonView } from './components/LessonView';
 import { Login } from './components/Login';
-import { MyCourses } from './components/MyCourses';
+import { CoursesList } from './components/CoursesList';
 import { RankingBoard } from './components/RankingBoard';
 
 import { AdminPanel } from './components/AdminPanel';
+import { CategorySelector } from './components/CategorySelector';
 import { CertificatesView } from './components/CertificatesView';
 import { Background } from './components/Background';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -88,6 +89,13 @@ function App() {
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Login onLogin={handleLogin} />
           </div>
+        ) : !currentUser.category && currentUser.role !== 'admin' ? (
+          <CategorySelector onSelect={async (category) => {
+            await api.updateUserCategory(currentUser.id, category);
+            const updatedUser = { ...currentUser, category };
+            setCurrentUser(updatedUser);
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+          }} />
         ) : (
           <>
             <header className="glass-panel" style={{ padding: '1rem 2rem', margin: '1rem 2rem', borderRadius: 'var(--radius-lg)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -184,8 +192,12 @@ function App() {
                   ) : view === 'certificates' ? (
                     <CertificatesView currentUser={currentUser} onBack={() => setView('dashboard')} />
                   ) : view === 'courses' ? (
-                    <MyCourses userId={currentUser.id} onSelectLesson={handleSelectLesson} onBack={() => setView('dashboard')} onViewCertificate={() => setView('certificates')} />
-                  ) : (
+                    <CoursesList
+                      userId={currentUser.id}
+                      onSelectLesson={handleSelectLesson}
+                      onBack={() => setView('dashboard')}
+                      onViewCertificate={() => setView('certificates')}
+                    />) : (
                     <Dashboard user={currentUser} onSelectLesson={handleSelectLesson} onNavigate={setView} />
                   )}
                 </motion.div>
