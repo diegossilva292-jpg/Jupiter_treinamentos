@@ -275,7 +275,7 @@ export const LessonView: React.FC<LessonViewProps> = ({ lesson, courseId, module
                                             style={{ overflow: 'hidden', background: 'rgba(0,0,0,0.2)' }}
                                         >
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', padding: '0.5rem' }}>
-                                                {mod.lessons.map((l, idx) => {
+                                                {mod.lessons.map((l) => {
                                                     const isCompleted = completedLessons.has(l.id);
                                                     const isCurrent = l.id === lesson.id;
 
