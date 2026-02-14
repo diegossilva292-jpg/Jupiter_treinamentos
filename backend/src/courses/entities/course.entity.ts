@@ -13,6 +13,10 @@ export class Course {
     @Column({ type: 'text' })
     description: string;
 
+    @Column('simple-array', { nullable: true, default: '' })
+    categories: string[]; // tecnico-campo, suporte, marketing, etc
+
+
     @OneToMany(() => CourseModule, module => module.course, { cascade: true, eager: true })
     modules: CourseModule[];
 

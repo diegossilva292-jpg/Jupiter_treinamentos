@@ -25,4 +25,9 @@ export class UsersController {
     async findById(@Param('id') id: string): Promise<User | null> {
         return this.usersService.findById(id);
     }
+
+    @Post(':id/category')
+    async updateCategory(@Param('id') id: string, @Body() body: { category: string }): Promise<User | null> {
+        return this.usersService.updateCategory(id, body.category);
+    }
 }

@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Course } from './entities/course.entity';
 import { CourseModule } from './entities/module.entity';
 import { Lesson } from './entities/lesson.entity';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class CoursesService {
@@ -14,6 +15,8 @@ export class CoursesService {
         private moduleRepo: Repository<CourseModule>,
         @InjectRepository(Lesson)
         private lessonRepo: Repository<Lesson>,
+        @InjectRepository(User)
+        private userRepo: Repository<User>,
     ) { }
 
     async findAll(): Promise<Course[]> {
@@ -116,5 +119,22 @@ export class CoursesService {
         for (let i = 0; i < lessonIds.length; i++) {
             await this.lessonRepo.update(lessonIds[i], { order: i + 1 });
         }
+    }
+
+    async getCoursesForUser(userId: string): Promise<Course[]> {
+        const user = await this.userRepo.findOne({ where: { id: userId } });
+
+        if (!user || !user.category) {
+            // If user has no category, return all courses
+            return this.findAll();
+        }
+
+        const allCourses = await this.findAll();
+
+        // Filter courses: include if no categories assigned OR user's category matches
+        return allCourses.filter(course =>
+            !course.categories?.length || // Course with no categories = available for all
+            course.categories.includes(user.category)
+        );
     }
 }

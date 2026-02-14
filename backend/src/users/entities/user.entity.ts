@@ -22,6 +22,10 @@ export class User {
     @Column({ nullable: true })
     password: string; // Hash bcrypt (future use)
 
+    @Column({ nullable: true })
+    category: string; // tecnico-campo, suporte, marketing, vendas, administrativo, gerencia
+
+
     @OneToMany(() => Progress, progress => progress.user)
     progress: Progress[];
 

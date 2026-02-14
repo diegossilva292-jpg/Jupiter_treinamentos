@@ -14,6 +14,11 @@ export class CoursesController {
         return this.coursesService.findAll();
     }
 
+    @Get('user/:userId')
+    async getCoursesForUser(@Param('userId') userId: string): Promise<Course[]> {
+        return this.coursesService.getCoursesForUser(userId);
+    }
+
     @Get(':id')
     async findOne(@Param('id') id: string): Promise<Course | null> {
         return this.coursesService.findOne(id);

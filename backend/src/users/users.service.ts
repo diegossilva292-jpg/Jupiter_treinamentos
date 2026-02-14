@@ -37,4 +37,9 @@ export class UsersService {
             take: 10
         });
     }
+
+    async updateCategory(userId: string, category: string): Promise<User | null> {
+        await this.userRepo.update(userId, { category });
+        return this.findById(userId);
+    }
 }
